@@ -1,6 +1,6 @@
 --- 
-title: "YOUR TITLE HERE"
-author: "YOUR NAMES HERE"
+title: Dog Bite Accident Analysis
+author: Xiaorui Qin, Ziyu Fang, Ruoxi Liu
 date: "`r Sys.Date()`"
 site: bookdown::bookdown_site
 ---
