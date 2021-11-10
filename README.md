@@ -2,7 +2,7 @@
 
 *This repo was initially generated from a bookdown template available here: https://github.com/jtr13/EDAVtemplate.*	
 
-URL for the output: https://rul124.github.io/dogbiteanalysis/
+URL for the output: https://rul124.github.io/DogBiteAnalysis/
 
 This project is for Stats 5702 EDAV Fall 2021:\
 Ziyu Fang (zf2253); Xiaorui Qin (xq2209); Ruoxi Liu (rl3155)
