@@ -1,1 +1,551 @@
 # Missing values
+
+```{r setup, include=FALSE}
+# this prevents package loading message from appearing in the rendered version of your problem set
+knitr::opts_chunk$set(warning = FALSE, message = FALSE,
+                      echo = TRUE)
+```
+
+### Read the data
+
+We analyze the missing values of our data "Dog Bite Data" from https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg, which contains 10280 rows and 9 columns. We read the data and show the names of the 9 columns for analysis.
+
+```{r}
+library(ggplot2)
+library(dplyr)
+DogBite <- read.csv("DOHMH_Dog_Bite_Data.csv", header = TRUE, na.strings = c(""))
+colnames(DogBite)
+```
+
+### Missing values by column
+
+```{r}
+colSums(is.na(DogBite)) %>%
+  sort(decreasing = TRUE)
+```
+
+First, we show missing values by column. We could conclude that there are most missing values in "Age" while "ZipCode" and "Breed" come second and third. We can roughly analyze the possible reasons. Most of dog owners adopt or purchase their dogs, thus some of them may not be sure of the date of birth. Of course, dogs of some owners are born to the big dog at home, or they know the dogs’ birthday when they purchase them, but some owners are hard to know. This is a very common situation. In addition, many dog owners' dogs may be hybrid breeds, or stray dogs adopted by owners. In these situations, owners may not be sure of the "breed" of their dogs. As for the "ZipCode", dog bites may not always happen near the dog owners’ houses, so owners may not be familiar with the "ZipCode" there. Of course, many careful dog owners will inquire and fill in "ZipCode", but others may not fill in it.
+
+All of other columns do not have any missing value. In class, Prof. Robbins mentioned that we could consider the connection between some columns, such as the address and the zipcode. In our data, we noticed that there is no connection of missing values between "ZipCode" and "Borough" according to the current analysis. We could not see any other connections right now.
+
+### Missing values by row
+
+Since we have 10280 rows, it is not clear if we continue analyzing with all of the data. Our data only contains one file, thus we randomly select 40 rows for analysis.
+
+```{r}
+sampleDogBite <- sample_n(DogBite, 40)
+```
+
+```{r}
+rowSums(is.na(sampleDogBite)) %>%
+  sort(decreasing = TRUE)
+```
+
+Then we show missing values by row from large to small. We found that rows with the most missing values miss 3 values (i.e, "Age", "ZipCode", and "Breed"), while rows with the least missing values miss 0 value. There are only a small part of events in which all three values are missing.
+
+### Row / column missing patterns - heatmap
+
+```{r, fig.height = 12, fig.width = 12}
+library(tidyverse)
+tidyDogBite <- sampleDogBite %>% 
+    rownames_to_column("id") %>% 
+    gather(key, value, -id) %>% 
+    mutate(missing = ifelse(is.na(value), "yes", "no"))
+ggplot(tidyDogBite, aes(x = key, y = fct_rev(id), fill = missing)) +
+  geom_tile(color = "white") + 
+  ggtitle("DogBite with NAs added") +
+  scale_fill_viridis_d() + # discrete scale
+  theme_bw()
+```
+
+Now we could show the heatmap to analyze the row / column missing patterns and distributions of missing values. In our heatmap, we discover that the vast majority of rows that miss “breed” and “ZipCode” also miss “Age”. There are only 2 exceptions in our 40 sample rows. One possible reason is that the most easily unknown characteristic of dogs is “age”. If dog owners do not know the age of dogs when adopting or purchasing it, it will be difficult to know in the future. However, the “breed” information can be identified through later medical tests, and “ZipCode” can also be queried after the dog bite events. If not even the easily known information of “breed” and “ZipCode” is available, it indicates that the data has limited information about these dogs and dog bite events, so it is easy to miss “age”.
+
+### Row / column missing patterns - gg_miss_fct
+
+Since most columns of our dataset contain categorical data, it is not proper to analyze row / column missing patterns with mi::missing_data.frame() for heatmaps or with “geom_tile()” for missing values by variable as we discussed in class. In order to better analyze categorical data, we think “gg_miss_fct()” is a better choice. We choose three columns, i.e., “Gender”, “SpayNeuter”, and “Borough”, to analyze the patterns. The plots show the proportions of missing values in different categories of the certain column. Note that we use the entire dataset instead of our 40 samples in this part for better discussion.
+
+```{r}
+library(naniar)
+gg_miss_fct(x = DogBite, fct = Gender)
+```
+
+In the plot, “F” denotes “Female”, “M” denotes “Male”, and “U” denotes “Unknown”. The plot shows that most events whose “Gender” is “Unknown” miss “Age”, and about half of these events miss “Breed” and “ZipCode”. However, few events whose “Gender” is “Male” or “Female” miss “Age”, “Breed”, and “ZipCode”, and there is no great difference between the patterns of “Male” and “Female”. We could analyze this situation. As we discussed above, the most easily unknown characteristic of dogs is “Age”. If dog owners do not know the age of dogs when adopting or purchasing it, it will be difficult to know in the future. Although “breed” and “ZipCode” are also easily be missed, they are a little easier to be obtained than “Age”. The “breed” information can be identified through later medical tests, and “ZipCode” can also be queried after the dog bite events. However, the “Gender” information can be identified through observations or medical tests easily. If in an event, we do not even know the gender of the dog, it indicates that the data has limited information about these dogs and dog bite events, it is easy to miss “Age”, “Breed”, and “ZipCode”, especially “Age”. In addition, there is not much difference between patterns of missing values in female and male dogs, since the gender will not influence the patterns.
+
+```{r}
+gg_miss_fct(x = DogBite, fct = SpayNeuter)
+```
+
+In the plot, “false” and “true” denote the situation of SpayNeuter of dogs. The plot shows that most events whose “SpayNeuter” is “false” miss “Age”, and about half of these events miss “Breed” and “ZipCode”. However, few events whose “SpayNeuter” is “true” miss “Age”, “Breed”, and “ZipCode”. We could analyze this situation. As we discussed above, the most easily unknown characteristic of dogs is “Age”. If dog owners do not know the age of dogs when adopting or purchasing it, it will be difficult to know in the future. Although “breed” and “ZipCode” are also easily be missed, they are a little easier to be obtained than “Age”. The “breed” information can be identified through later medical tests, and “ZipCode” can also be queried after the dog bite events. If in an event, “SpayNeuter” is true, which means the dog is well taken care of and controlled, these careful dog owners are more likely to know the “Age”, “Breed”, and “ZipCode”. By contrast, when it is false, it is more likely to miss “Age”, “Breed”, and “ZipCode”, especially “Age”.
+
+```{r}
+gg_miss_fct(x = DogBite, fct = Borough)
+```
+
+The plot denotes the patterns of missing values in different boroughs. The plot shows that whatever the borough is, it is more likely to miss “Age” than “Breed” and “ZipCode”, which is consistent with what we discussed above. There is one exception. When the “Borough” is “Other”, i.e., we do not know the specific borough, 50% of events miss “ZipCode”. This is reasonable and Prof. Robbins also gave a similar example in class. Since both of “Borough” and “ZipCode” contain the information of the address, there is the connection between them. When we do not know the specific borough, it is likely to miss “ZipCode”.
+
+### Missing patterns
+
+```{r}
+x <- mi::missing_data.frame(sampleDogBite)
+```
+
+```{r}
+class(x)
+```
+
+```{r}
+x@patterns
+```
+
+This part lists the situation of missing values of our 40 samples. Each one indicates the kinds of values that are missed in each sample.
+
+```{r}
+levels(x@patterns)
+```
+
+This part lists all of the patterns above.
+
+```{r}
+summary(x@patterns)
+```
+
+This part shows the specific counts of patterns above.
+
+Then, we aim to create a missing values plot in the style of extracat::visna() (no longer available on CRAN) using ggplot2. First, we create the function for creating missing plots.
+
+```{r}
+plot_missing <- function(dataset, percent = TRUE) {
+  #dataset <- dataset[sapply(dataset, function(x)
+    #is.numeric(x))]
+  
+  missing_patterns <- data.frame(is.na(dataset)) %>%
+    group_by_all() %>%
+    count(name = "count", sort = TRUE) %>%
+    ungroup()
+  
+  missing_patterns$alpha <-
+    ifelse(rowSums(missing_patterns[, -ncol(missing_patterns)]) == 0,
+           "dark", "light")
+  
+  missing_patterns <- missing_patterns %>%
+    mutate(pattern = 1:nrow(missing_patterns)) %>%
+    mutate(pattern = fct_reorder(as.factor(pattern), count))
+  missing_patterns$pattern <- factor(missing_patterns$pattern,
+                                     levels = nrow(missing_patterns):1)
+  
+  g2 <- ggplot(missing_patterns) +
+    geom_bar(aes(y = count, x = pattern, alpha = alpha),
+             stat = "identity",
+             fill = "lightblue") +
+    theme_bw() + labs(x = "", y = "row count", title = "") + coord_flip() +
+    scale_alpha_manual(values = c(2, 0.5), guide = "none")
+  
+  g2_p <- ggplot(missing_patterns) +
+    geom_bar(aes(
+      y = count / sum(count) * 100,
+      x = pattern,
+      alpha = alpha
+    ),
+    stat = "identity",
+    fill = "lightblue") +
+    theme_bw() + labs(x = "", y = "% rows", title = "") + coord_flip() +
+    scale_alpha_manual(values = c(2, 0.5), guide = "none")
+  
+  tidydatset <- dataset %>%
+    rownames_to_column("id") %>%
+    gather(key, value,-id) %>%
+    mutate(missing = ifelse(is.na(value), "yes", "no"))
+  
+  missing_row <-
+    tidydatset %>% group_by(key) %>% summarise(n = sum(missing == "yes")) %>%
+    mutate(key = fct_reorder(key, n))
+  missing_row$key <-
+    factor(missing_row$key, levels = rev(levels(missing_row$key)))
+  
+  g1 <-
+    ggplot(missing_row) + geom_bar(aes(x = key, y = n), stat = "identity", fill =
+                                     "lightblue") +
+    theme_bw() + labs(x = "", y = "num rows missing", title = "Missing value patterns") +
+    theme(axis.text.x = element_text(
+      vjust = 0.5,
+      hjust = 0.5,
+      angle = 45
+    ))
+  
+  g1_p <- ggplot(missing_row) + geom_bar(aes(x = key, y = n / nrow(dataset) *
+                                               100),
+                                         stat = "identity", fill = "lightblue") +
+    theme_bw() + labs(x = "", y = "% rows missing", title = "") +
+    theme(axis.text.x = element_text(
+      vjust = 0.5,
+      hjust = 0.5,
+      angle = 45
+    ))
+  
+  tidydataset2 <- missing_patterns %>% select(-count, -pattern) %>%
+    rownames_to_column("id") %>%
+    gather(key, value,-c(id, alpha))
+  
+  tidydataset2$id <-
+    factor(tidydataset2$id, levels = nrow(missing_patterns):1)
+  tidydataset2$key <-
+    factor(tidydataset2$key, levels = levels(missing_row$key))
+  
+  g3 <-
+    ggplot(tidydataset2, aes(
+      x = key,
+      y = id,
+      fill = value,
+      alpha = alpha
+    )) +
+    geom_tile(color = "white") +
+    scale_fill_manual(values = c("grey", "purple"), guide = "none") +
+    labs(x = "variable", y = "missing pattern") +
+    scale_alpha_manual(values = c(2, 0.5), guide = "none") +
+    annotate(
+      "text",
+      x = rep(6, sum(missing_patterns$alpha == "dark")),
+      y = length(missing_patterns$alpha) - which(missing_patterns$alpha ==
+                                                   "dark") + 1,
+      label = rep("complete cases",
+                  sum(missing_patterns$alpha == "dark"))
+    ) +
+    theme(axis.text.x = element_text(
+      vjust = 0.5,
+      hjust = 0.5,
+      angle = 45
+    ))
+  
+  library(cowplot)
+  
+  if (percent == FALSE)
+  {
+    outplot = plot_grid(
+      g1,
+      NULL,
+      g3,
+      g2,
+      rel_heights = c(1, 2),
+      rel_widths = c(2, 1),
+      align = "hv"
+    )
+  }
+  else if (percent == TRUE)
+  {
+    outplot = plot_grid(
+      g1_p,
+      NULL,
+      g3,
+      g2_p,
+      rel_heights = c(1, 2),
+      rel_widths = c(3, 1),
+      align = "hv"
+    )
+  }
+  
+  return(outplot)
+}
+```
+
+Then we use the function to draw the plot. Note that we use the entire dataset instead of our 40 samples in this part for better discussion.
+
+```{r}
+DogBiteForPlot <- subset(DogBite, select = -c(UniqueID))
+plot_missing(DogBiteForPlot, percent = FALSE)
+```
+
+First, we could analyze the left upper corner of this plot, which sorts the counts of rows that miss certain values. We found that there are most missing values in “Age” while “ZipCode” and “Breed” come second and third. All of other columns do not have any missing value. We can analyze the possible reasons. Most of dog owners adopt or purchase their dogs, thus some of them may not be sure of the date of birth. Of course, dogs of some owners are born to the big dog at home, or they know the dogs’ birthday when they purchase them, but some owners are hard to know. This is a very common situation. In addition, many dog owners’ dogs may be hybrid breeds, or stray dogs adopted by owners. In these situations, owners may not be sure of the “breed” of their dogs. As for the “ZipCode”, dog bites may not always happen near the dog owners’ houses, so owners may not be familiar with the “ZipCode” there. Of course, many careful dog owners will inquire and fill in “ZipCode”, but others may not fill in it.
+
+Second, we could analyze the left lower corner, which shows all of the patterns, i.e., miss nothing, only miss “Age”, miss “Age” and “ZipCode”, miss “Age” and “ZipCode” and “Breed”, only miss “ZipCode”, miss “Age” and “Breed”, only miss “Breed”, miss “ZipCode” and “Breed”. 
+
+Third, we analyze the right lower corner, which sort the counts of 8 kinds of patterns we mentioned above. We could conclude that most events miss nothing. Events that only miss “Age” come second. Events that miss “Age” and “ZipCode” come third. Events that miss “ZipCode” and “Breed” is the least. We will analyze them separately. 
+
+Most events miss nothing, which shows that the quality of our dataset is good. 
+
+Many events only miss “Age”. As we discussed above, the most easily unknown characteristic of dogs is “Age”. If dog owners do not know the age of dogs when adopting or purchasing it, it will be difficult to know in the future. Although “breed” and “ZipCode” are also easily be missed, they are a little easier to be obtained than “Age”. The “breed” information can be identified through later medical tests, and “ZipCode” can also be queried after the dog bite events. 
+
+Events that miss “Age” and “ZipCode” come third. As we mentioned above, “ZipCode” is easier to be obtained than “Age”. If in an event, we even do not know “ZipCode”, it indicates that the data has limited information about these dogs and dog bite events, it is easy to miss “Age”. In addition, this also indicate that “Breed” is easier to be obtained than “Age” and “ZipCode”, which is consistent with the left upper corner of this plot. 
+
+Events that miss “ZipCode” and “Breed” is the least. As we mentioned above, the most easily unknown characteristic of dogs is “Age”. It is easier to obtain “Breed” and “ZipCode”. If we do not even know “Breed” and “ZipCode”, it is less likely to know “Age”.
+
+```{r}
+DogBiteForPlot <- subset(DogBite, select = -c(UniqueID))
+plot_missing(DogBiteForPlot, percent = TRUE)
+```
+
+In this part, we draw a plot using our function, i.e., plot_missing(DogBiteForPlot, percent = TRUE). The situation is similar to the above plot from plot_missing(DogBiteForPlot, percent = FALSE).
+
+### Missing by borough
+
+```{r}
+percent_missing <- DogBite %>% group_by(Borough) %>% 
+  summarize(num_bites = n(), num_na = sum(is.na(`Age`))) %>% 
+  mutate(percent_na = round(num_na/num_bites, 2)) %>% 
+  arrange(-percent_na)
+percent_missing
+```
+
+First, we show the percent of missing values of “Age” in different boroughs. Note that we use the entire dataset instead of our 40 samples in this part for better discussion. Events in “Bronx” is most likely to miss “Age”. There is not a large difference between the percent of different boroughs.
+
+```{r}
+percent_missing <- DogBite %>% group_by(Borough) %>% 
+  summarize(num_bites = n(), num_na = sum(is.na(`Breed`))) %>% 
+  mutate(percent_na = round(num_na/num_bites, 2)) %>% 
+  arrange(-percent_na)
+percent_missing
+```
+
+Now we show the percent of missing values of “Breed” in different boroughs. Events in “Other” is most likely to miss “Breed”. One possible reason is that according to our discussion above, there is a connection between “ZipCode” and “Borough”, which indicates that if we do not know the specific borough, it is more likely to miss “ZipCode”. If we do not even know “ZipCode”, it indicates that the data has limited information about these dogs and dog bite events, so it is easy to miss “Breed”.
+
+```{r}
+percent_missing <- DogBite %>% group_by(Borough) %>% 
+  summarize(num_bites = n(), num_na = sum(is.na(`ZipCode`))) %>% 
+  mutate(percent_na = round(num_na/num_bites, 2)) %>% 
+  arrange(-percent_na)
+percent_missing
+```
+
+Then we show the percent of missing values of “ZipCode” in different boroughs. Events in “Other” is most likely to miss “ZipCode”. One possible reason is that according to our discussion above, there is a connection between “ZipCode” and “Borough”, which indicates that if we do not know the specific borough, it is more likely to miss “ZipCode”. 
+
+```{r}
+percent_missing <- DogBite %>% group_by(Borough) %>% 
+  summarize(num_bites = n(), num_na = sum(is.na(`Age`))) %>% 
+  mutate(percent_na = round(num_na/num_bites, 2)) %>% 
+  arrange(-percent_na)
+DogBitesum <- DogBite %>% 
+  group_by(Borough) %>% 
+  summarize(meanAge = round(mean(as.numeric(`Age`), na.rm = TRUE), 1)) %>%
+  left_join(percent_missing %>% select(Borough, percent_na),
+            by = "Borough") %>% 
+  arrange(desc(percent_na))
+DogBitesum
+```
+
+```{r}
+DogBitesumtidy <- DogBitesum %>%
+  pivot_longer(cols = meanAge,
+               names_to = "subject",
+               values_to = "meanscore")
+ggplot(DogBitesumtidy, aes(meanscore, percent_na, color = Borough)) + geom_point(size = 2) + facet_wrap(~subject) + theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+We also explore the relationship between average age of dogs and the missing percent of “Age” in different boroughs. We could roughly infer that the smaller the average age is, the higher the missing percent of “Age” is. However, this relationship is not stable and not obvious.
+
+### Number of missing by year
+
+```{r}
+processed_DogBite <- DogBite %>%
+  mutate(Year = case_when(
+  str_detect(DogBite$DateOfBite, "2015") ~ "2015",
+  str_detect(DogBite$DateOfBite, "2016") ~ "2016",
+  str_detect(DogBite$DateOfBite, "2017") ~ "2017"
+))
+
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(sum.na = sum(is.na(Age)))
+
+ggplot(missing, aes(x = 1:3, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Number of missing values by year") +
+  xlab("") +
+  ylab("Number of missing ages") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(sum.na = sum(is.na(Breed)))
+
+ggplot(missing, aes(x = 1:3, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Number of missing values by year") +
+  xlab("") +
+  ylab("Number of missing breeds") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(sum.na = sum(is.na(ZipCode)))
+
+ggplot(missing, aes(x = 1:3, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Number of missing values by year") +
+  xlab("") +
+  ylab("Number of missing ZipCodes") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+We process our data and show the number of missing values by year, i.e., 2015, 2016, and 2017. Note that we use the entire dataset instead of our 40 samples in this part for better discussion. We use three plots to show the situations of “Age”, “Breed”, and “ZipCode” separately. We could see that in all of the three plots, events in 2015 miss most values. From 2015 to 2017, the number of missing values gradually decreased in total (especially for “Breed”). However, we are not sure whether this is due to the optimization of management, or because the data contained in our dataset in 2015 is the most. Thus, we show the proportion of missing values by year then.
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(num = n(), sum.na = sum(is.na(Age))) %>%
+  mutate(percent_na = sum.na/num)
+
+ggplot(missing, aes(x = 1:3, y = percent_na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Proportion of missing values by year") +
+  xlab("") +
+  ylab("Proportion of missing ages") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(num = n(), sum.na = sum(is.na(Breed))) %>%
+  mutate(percent_na = sum.na/num)
+
+ggplot(missing, aes(x = 1:3, y = percent_na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Proportion of missing values by year") +
+  xlab("") +
+  ylab("Proportion of missing breeds") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(num = n(), sum.na = sum(is.na(ZipCode))) %>%
+  mutate(percent_na = sum.na/num)
+
+ggplot(missing, aes(x = 1:3, y = percent_na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Proportion of missing values by year") +
+  xlab("") +
+  ylab("Proportion of missing ZipCodes") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+We found that in the proportion of missing values by year, it is clear that as time goes on, the proportion of missing value has a decreasing trend, especially for “Breed” and “ZipCode”. One possible reason is that the government has strengthened its management of dog bites and put forward higher requirements for data integrity. As a result, there are less missing values in 2017.
+
+### Number of missing by month
+
+```{r}
+processed_DogBite <- DogBite %>%
+  mutate(Month = case_when(
+    str_detect(DogBite$DateOfBite, "January") ~ "01",
+    str_detect(DogBite$DateOfBite, "February") ~ "02",
+    str_detect(DogBite$DateOfBite, "March") ~ "03",
+    str_detect(DogBite$DateOfBite, "April") ~ "04",
+    str_detect(DogBite$DateOfBite, "May") ~ "05",
+    str_detect(DogBite$DateOfBite, "June") ~ "06",
+    str_detect(DogBite$DateOfBite, "July") ~ "07",
+    str_detect(DogBite$DateOfBite, "August") ~ "08",
+    str_detect(DogBite$DateOfBite, "September") ~ "09",
+    str_detect(DogBite$DateOfBite, "October") ~ "10",
+    str_detect(DogBite$DateOfBite, "November") ~ "11",
+    str_detect(DogBite$DateOfBite, "December") ~ "12")) %>%
+  mutate(Year = case_when(
+    str_detect(DogBite$DateOfBite, "2015") ~ "2015",
+    str_detect(DogBite$DateOfBite, "2016") ~ "2016",
+    str_detect(DogBite$DateOfBite, "2017") ~ "2017")) 
+processed_DogBite$CombinedDate <- str_c(processed_DogBite$Year, "-", processed_DogBite$Month)
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(sum.na = sum(is.na(Age))) %>%
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Number of missing values by month") +
+  xlab("") +
+  ylab("Number of missing ages") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(sum.na = sum(is.na(Breed))) %>%
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Number of missing values by month") +
+  xlab("") +
+  ylab("Number of missing breeds") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(sum.na = sum(is.na(ZipCode))) %>%
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Number of missing values by month") +
+  xlab("") +
+  ylab("Number of missing ZipCodes") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+For further analysis, we process our data and show the number of missing values by month, e.g., 2015-01, 2015-02. Note that we use the entire dataset instead of our 40 samples in this part for better discussion. We use three plots to show the situations of “Age”, “Breed”, and “ZipCode” separately. We could see that from 2015 to 2017, the number of missing values gradually decreased in total (especially for “Breed”). In addition, the plot has the periodicity, and the number of missing values increases in summer of each year. However, we are not sure whether this is due to the optimization of management and particularity of summer, or because the data quantity. Thus, we show the proportion of missing values by month then.
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(num_bites = n(), sum.na = sum(is.na(Age))) %>%
+  mutate(percent_na = sum.na/num_bites) %>% 
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = percent_na)) +
+  geom_point() +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Proportion of missing values by month") +
+  xlab("") +
+  ylab("Proportion of missing ages") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(num_bites = n(), sum.na = sum(is.na(Breed))) %>%
+  mutate(percent_na = sum.na/num_bites) %>% 
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = percent_na)) +
+  geom_point() +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Proportion of missing values by month") +
+  xlab("") +
+  ylab("Proportion of missing breeds") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(num_bites = n(), sum.na = sum(is.na(ZipCode))) %>%
+  mutate(percent_na = sum.na/num_bites) %>% 
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = percent_na)) +
+  geom_point() +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Proportion of missing values by month") +
+  xlab("") +
+  ylab("Proportion of missing ZipCodes") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+We found that in the proportion of missing values by month, it is clear that as time goes on, the proportion of missing value has a decreasing trend. One possible reason is that the government has strengthened its management of dog bites and put forward higher requirements for data integrity. In addition, the plot has the periodicity, and the proportion of missing values increases in summer of each year. We do not know the reason now. We will further analyze the time series in our final project to try to solve this problem.
