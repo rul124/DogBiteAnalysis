@@ -1,64 +1,32 @@
-This is a template for the EDAV final project. It is based on the template created with *File, New Project..., New Directory, Book Project using bookdown* in RStudio. 
-
-
-## ABSOLUTE ESSENTIALS
-
-*If you have any difficulties or have feedback of any kind, please file an issue.*
-
-### Copy this template
-
-- [ ] 1. Click the green "Use this template" button above.  DO NOT FORK THE REPO. Choose a descriptive name for your repo, such as "federalbudget" or "AIDSdeaths".  (If you change your mind before you do any work, delete your new repo and start over.)
-
-- [ ] 2. In the Description field, write: "Bookdown source files for EDAV final project".
-
-### Set up GitHub Pages	
-- [ ] 1. On the home page of your repo, click Settings. Scroll down to the GitHub pages section and change **Source** from **None** to **main**, change **/ (root)** to **/docs** folder, and click Save. Above the **Source** line, a bar will appear with your book's URL. The bar will initially be blue and indicate that your book is *ready* to be published and will change to green once it is published. Copy the URL. (Note that sometimes there is a delay until your book actually appears at that URL. If it doesn't appear after a few minutes, make a change and commit it to trigger a GitHub Pages build.)	
-
-- [ ] 2. Click the gear button near "About" on the home page of the repo and paste your book URL into the **Website** field that appears on the right.
-
-### Clone the repo
-
-- [ ] 1. Clone your new repo with *File, New Project..., Version Control, Git* in RStudio.
-
-### Edit some key files
-
-- [ ] 1. In `index.Rmd`, change YOUR TITLE HERE to your title.
-
-- [ ] 2. In `index.Rmd`, change YOUR NAMES HERE to your names.
-
-- [ ] 3. In `_bookdown.yml`, change YOUR GITHUB USERNAME to your GitHub username in the two places it appears.
-
-- [ ] 4. In `_bookdown.yml`, change YOUR GITHUB REPO to your GitHub repo name in the two places it appears.
-
-(Note that 3. and 4. provide links to the `.Rmd` files of your project for editing and viewing. If you move your `.Rmd` files you will need to update these file paths. Once your book is rendered, test that the edit (pen) and view (eye) buttons work.)
-
-- [ ] 5. In `_output.yml`, change YOUR SHORT TITLE to a shortened version of your title. (Leave the "after:" line indicating that the book was published with bookdown as is.)
-
-### Render the book
-
-- [ ] 1. Install **bookdown** with `install.packages("bookdown")`. If you already have it, update to the most recent version.
-
-- [ ] 2. Render locally with `bookdown::render_book("index.Rmd")` or clicking the *Build book* button which should appear in the Build tab (in the same pane as Environment, History, Connections, ...).
-
-- [ ] 3. Use `browseURL("docs/index.html")` to view your book locally (or just open `index.html` in a browser).
-
-- [ ] 4. If it looks good, commit and push all changed files to GitHub. 
-
-(You will need to repeat steps 2 and 4 every time you wish to update the book online.)
-
-### Edit README	
-
-Once you've completed these steps, delete the content of this **README** and add a short description of your project with a link to the book URL. It would be appreciated if you add the following to the end:	
+# Dog Bite Analysis
 
 *This repo was initially generated from a bookdown template available here: https://github.com/jtr13/EDAVtemplate.*	
 
-### Demo Video	
+URL for the output: https://rul124.github.io/DogBiteAnalysis/
 
-A demo video showing how to create a **bookdown book** following these similar instructions: http://bit.ly/fiveminutebookdown Note that this video uses a different template.
+This project is for Stats 5702 EDAV Fall 2021:\
+Ziyu Fang (zf2253); Xiaorui Qin (xq2209); Ruoxi Liu (rl3155)
+## Data Lists:
+Dog Bite Data: (Main Dataset)\
+ https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg \
+NYC Dog Licensing Data: （Auxiliary Dataset)\
+https://data.cityofnewyork.us/Health/NYC-Dog-Licensing-Dataset/nu7n-tubp
 
-### Additional features	
 
-Please consult the official guide to **bookdown**: https://bookdown.org/yihui/bookdown
+## Data Set Description:
+Our main data is about dog bite incidents that happened in NYC from 2015 to 2017 reported to the Department of Health and Mental Hygiene (DOHMH). There are about 10.3k records in total. Each record represents a single dog bite incident and information on breed, age, gender. Spayed and neutered status are also provided. With those features given, we can explore the relationships between bite incidents and dogs’ related features. We can also make some predictions about whether some specific dogs are more likely to bite citizens in some neighborhoods and seasons. The second dataset is an auxiliary one which provides information about licensing in different areas in NYC. We want to use this data to explore more about licensing with areas in order to make a better assumption about relationship dog bitten incidents with environments.
+
+## Questions:
+Here are some interesting questions that we want to answer when having this data set: (And we also provide some explanations about why we want to pay attention to them)
+
+1. What’s the relationship between dog bites and dog’s breed, age, gender and whether it’s neuter or not? We also want to see if a specific season makes dogs more aggressive? Are there some neighborhoods where dogs get stimulated easily such that more fights and bite incidents are provoked?
+If there indeed exists a relationship between dog bites and some specific features. Our results can remind the dog’s owners to pay closer attention to their dogs while walking them in conditions that are proven to be more likely to make their dogs aggressive. What we want to do is that, with dog lovers’ more care, it can help reduce the unwanted incidents and also make puppies as lovely creatures in people’s minds.
+
+2. In the existing dog bites dataset, we can see the breed with the highest proportion of biting people. In order to see if the reason behind it is about its higher population among all dogs or simply about this breed’s natural potential of being aggressive, we could use the auxiliary dataset (NYC Dog Licensing Dataset), which is much larger than the dog bites dataset, to roughly estimate the population composition of different breeds and analyze the above question. 
+With this exploration, we can have a clearer picture of the relationship between breeds and its potential aggressiveness. We do not want to make a rash decision of naming some breeds “aggressive ones” without comparing the proportion. In order to give a more scientific answer, this step is unignorable. 
 
 
-
+3. We want to have a classifier that, given the breed, age, gender, neuter situation, borough, and Zipcode of a certain dog, could we predict the probability of a dog attacking people? 
+We will divide our data into the training set and the testing set. A classifier will be trained and tested for dog bites, which could assist the Health Department to roughly get an idea of what kind of dogs are more dangerous. 
+With these probability given, the officers in the Health Department can strengthen targeted management. And feeders can also pay more attention in educating dogs with those features that can cause a high potential danger.
+The classifier will also help citizens to make a detour when they discover dogs that are likely to bite people to prevent more incidents.
