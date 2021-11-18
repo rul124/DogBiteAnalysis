@@ -9,7 +9,7 @@ Ziyu Fang (zf2253); Xiaorui Qin (xq2209); Ruoxi Liu (rl3155)
 ## Data Lists:
 Dog Bite Data: (Main Dataset)\
  https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg \
-NYC Dog Licensing Data: （Auxiliary Dataset)\
+NYC Dog Licensing Data: (Auxiliary Dataset)\
 https://data.cityofnewyork.us/Health/NYC-Dog-Licensing-Dataset/nu7n-tubp \
 NYC Weather Data: (Auxiliary Dataset)\
 https://www.weather.gov/wrh/climate?wfo=okx \
