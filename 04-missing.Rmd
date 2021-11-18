@@ -115,135 +115,101 @@ Then, we aim to create a missing values plot in the style of extracat::visna() (
 
 ```{r}
 plot_missing <- function(dataset, percent = TRUE) {
-  #dataset <- dataset[sapply(dataset, function(x)
-    #is.numeric(x))]
+  library(cowplot)
   
+  ###### for right plot ######
   missing_patterns <- data.frame(is.na(dataset)) %>%
     group_by_all() %>%
     count(name = "count", sort = TRUE) %>%
     ungroup()
   
-  missing_patterns$alpha <-
-    ifelse(rowSums(missing_patterns[, -ncol(missing_patterns)]) == 0,
-           "dark", "light")
-  
   missing_patterns <- missing_patterns %>%
     mutate(pattern = 1:nrow(missing_patterns)) %>%
-    mutate(pattern = fct_reorder(as.factor(pattern), count))
+    mutate(pattern = fct_reorder(as.factor(pattern), count))%>%
+    mutate(alpha = ifelse(
+        rowSums(missing_patterns[, -ncol(missing_patterns)]) == 0, 
+        "dark", "light"))
+  
   missing_patterns$pattern <- factor(missing_patterns$pattern,
                                      levels = nrow(missing_patterns):1)
   
-  g2 <- ggplot(missing_patterns) +
-    geom_bar(aes(y = count, x = pattern, alpha = alpha),
-             stat = "identity",
-             fill = "lightblue") +
-    theme_bw() + labs(x = "", y = "row count", title = "") + coord_flip() +
-    scale_alpha_manual(values = c(2, 0.5), guide = "none")
-  
-  g2_p <- ggplot(missing_patterns) +
-    geom_bar(aes(
-      y = count / sum(count) * 100,
-      x = pattern,
-      alpha = alpha
-    ),
-    stat = "identity",
-    fill = "lightblue") +
-    theme_bw() + labs(x = "", y = "% rows", title = "") + coord_flip() +
-    scale_alpha_manual(values = c(2, 0.5), guide = "none")
-  
-  tidydatset <- dataset %>%
+  ###### for up plot ######
+  dataset1 <- dataset %>%
     rownames_to_column("id") %>%
-    gather(key, value,-id) %>%
-    mutate(missing = ifelse(is.na(value), "yes", "no"))
+    gather("feature", "value", -id) %>%
+    mutate(missing = ifelse(is.na(value), 1, 0))
   
-  missing_row <-
-    tidydatset %>% group_by(key) %>% summarise(n = sum(missing == "yes")) %>%
-    mutate(key = fct_reorder(key, n))
-  missing_row$key <-
-    factor(missing_row$key, levels = rev(levels(missing_row$key)))
+  missing_row <- dataset1 %>%
+    group_by(feature) %>%
+    summarise(n = sum(missing)) %>%
+    mutate(feature = fct_reorder(feature, n))
   
-  g1 <-
-    ggplot(missing_row) + geom_bar(aes(x = key, y = n), stat = "identity", fill =
-                                     "lightblue") +
-    theme_bw() + labs(x = "", y = "num rows missing", title = "Missing value patterns") +
-    theme(axis.text.x = element_text(
-      vjust = 0.5,
-      hjust = 0.5,
-      angle = 45
-    ))
+  missing_row$feature <- factor(missing_row$feature, rev(levels(missing_row$feature)))
   
-  g1_p <- ggplot(missing_row) + geom_bar(aes(x = key, y = n / nrow(dataset) *
-                                               100),
-                                         stat = "identity", fill = "lightblue") +
-    theme_bw() + labs(x = "", y = "% rows missing", title = "") +
-    theme(axis.text.x = element_text(
-      vjust = 0.5,
-      hjust = 0.5,
-      angle = 45
-    ))
-  
-  tidydataset2 <- missing_patterns %>% select(-count, -pattern) %>%
+  ###### for middle plot ######
+  dataset2 <- missing_patterns %>%
+    select(-count, -pattern) %>%
     rownames_to_column("id") %>%
-    gather(key, value,-c(id, alpha))
+    gather("feature", "value", -c(id, alpha))
   
-  tidydataset2$id <-
-    factor(tidydataset2$id, levels = nrow(missing_patterns):1)
-  tidydataset2$key <-
-    factor(tidydataset2$key, levels = levels(missing_row$key))
+  dataset2$id <- factor(dataset2$id, levels = nrow(missing_patterns):1)
+  dataset2$feature <- factor(dataset2$feature, levels = levels(missing_row$feature))
   
-  g3 <-
-    ggplot(tidydataset2, aes(
-      x = key,
-      y = id,
-      fill = value,
-      alpha = alpha
-    )) +
+  middle <- dataset2 %>%
+    ggplot(aes(x = feature, y = id, fill = value, alpha = alpha)) +
     geom_tile(color = "white") +
     scale_fill_manual(values = c("grey", "purple"), guide = "none") +
-    labs(x = "variable", y = "missing pattern") +
-    scale_alpha_manual(values = c(2, 0.5), guide = "none") +
-    annotate(
-      "text",
-      x = rep(6, sum(missing_patterns$alpha == "dark")),
-      y = length(missing_patterns$alpha) - which(missing_patterns$alpha ==
-                                                   "dark") + 1,
-      label = rep("complete cases",
-                  sum(missing_patterns$alpha == "dark"))
-    ) +
-    theme(axis.text.x = element_text(
-      vjust = 0.5,
-      hjust = 0.5,
-      angle = 45
-    ))
+    labs(x = "variable", y = "missing patterns") + 
+    scale_alpha_manual(values = c(2, .5), guide = "none") +
+    annotate("text",
+             x = rep(6, sum(missing_patterns$alpha == "dark")),
+             y = length(missing_patterns$alpha) - which(missing_patterns$alpha == "dark") + 1,
+             label = rep("complete cases", sum(missing_patterns$alpha == "dark"))
+            ) +
+    theme(axis.text.x = element_text(vjust = .5, hjust = .5, angle = 45))
   
-  library(cowplot)
-  
-  if (percent == FALSE)
-  {
-    outplot = plot_grid(
-      g1,
-      NULL,
-      g3,
-      g2,
-      rel_heights = c(1, 2),
-      rel_widths = c(2, 1),
-      align = "hv"
-    )
+  if(percent == FALSE) {
+    right <- missing_patterns %>%
+      ggplot(aes(y=count, x=pattern, alpha = alpha)) + 
+      geom_bar(stat = "identity", fill = "lightblue") +
+      theme_bw() +
+      labs(x = "", y = "row count") +
+      coord_flip() +
+      scale_alpha_manual(values = c(2, .5), guide = "none")
+    
+    up <- missing_row %>%
+      ggplot(aes(x = feature, y = n)) + 
+      geom_bar(stat = "identity", fill = "lightblue") +
+      theme_bw() + 
+      labs(x = "", y = "num rows missing", title = "Missing value patterns") +
+      theme(axis.text.x = element_text(vjust = 0.5, hjust = 0.5, angle = 45))
+    
+    res = plot_grid(up, NULL, middle, right, 
+                    rel_heights = c(1, 2),
+                    rel_widths = c(2, 1),
+                    align = "hv")
+  } else if (percent == TRUE) {
+    right <- missing_patterns %>%
+      ggplot(aes(y = count/sum(count) * 100, x = pattern, alpha = alpha)) +
+      geom_bar(stat = "identity", fill = "lightblue") +
+      theme_bw() +
+      labs(x = "", y = "% rows", title = "") +
+      coord_flip() +
+      scale_alpha_manual(values = c(2, .5), guide = "none")
+    
+    up <- missing_row %>%
+      ggplot(aes(x = feature, y = n/nrow(dataset)*100)) + 
+      geom_bar(stat = "identity", fill = "lightblue") +
+      theme_bw() + 
+      labs(x = "", y = "num rows missing", title = "Missing value patterns") +
+      theme(axis.text.x = element_text(vjust = 0.5, hjust = 0.5, angle = 45))
+    
+    res = plot_grid(up, NULL, middle, right, 
+                    rel_heights = c(1, 2),
+                    rel_widths = c(3, 1),
+                    align = "hv")
   }
-  else if (percent == TRUE)
-  {
-    outplot = plot_grid(
-      g1_p,
-      NULL,
-      g3,
-      g2_p,
-      rel_heights = c(1, 2),
-      rel_widths = c(3, 1),
-      align = "hv"
-    )
-  }
-  
-  return(outplot)
+  return(res)
 }
 ```
 
