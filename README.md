@@ -11,8 +11,10 @@ Dog Bite Data: (Main Dataset)\
  https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg \
 NYC Dog Licensing Data: (Auxiliary Dataset)\
 https://data.cityofnewyork.us/Health/NYC-Dog-Licensing-Dataset/nu7n-tubp \
-NYC Weather Data: (Auxiliary Dataset)\
-https://www.weather.gov/wrh/climate?wfo=okx \
+NYC Weather Data: (Auxiliary Dataset) (to be decided) \
+https://www.weather.gov/wrh/climate?wfo=okx
+
+
 
 
 ## Data Set Description:
