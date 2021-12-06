@@ -1,6 +1,5 @@
 # Results
 ```{r setup, include=FALSE, echo=FALSE}
-knitr::opts_chunk$set(warning = FALSE, message = FALSE)
 library(pacman)
 p_load(tidyverse)
 p_load(lubridate)
