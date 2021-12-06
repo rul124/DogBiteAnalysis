@@ -1,5 +1,8 @@
 # Results
-```{r setup, include=FALSE, echo=FALSE}
+1. Process data
+ a. read doge bite data csv and other supplement data
+
+```{r, message=FALSE}
 library(pacman)
 p_load(tidyverse)
 p_load(lubridate)
@@ -8,12 +11,7 @@ p_load(ggExtra)
 
 lct <- Sys.getlocale("LC_TIME")
 Sys.setlocale("LC_TIME", "C")
-```
 
-1. Process data
- a. read doge bite data csv and other supplement data
-
-```{r, message=FALSE}
 DogBiteDF <- read_csv("DOHMH_Dog_Bite_Data.csv", na = c("", "NA","?"))
 Temperature <- read_csv("tempbymonth.csv", na = c("", "NA"))
 DogRegDF <- read_csv("NYC_Dog_Licensing_Dataset.csv")

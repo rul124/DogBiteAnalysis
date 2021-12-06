@@ -24,7 +24,7 @@
 <meta name="author" content="Xiaorui Qin, Ziyu Fang, Ruoxi Liu" />
 
 
-<meta name="date" content="2021-11-19" />
+<meta name="date" content="2021-12-06" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -33,7 +33,7 @@
   
 <link rel="prev" href="data-transformation.html"/>
 <link rel="next" href="results.html"/>
-<script src="libs/header-attrs-2.11/header-attrs.js"></script>
+<script src="libs/header-attrs-2.10/header-attrs.js"></script>
 <script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
 <link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
@@ -89,7 +89,11 @@
 <li class="chapter" data-level="4.0.9" data-path="missing-values.html"><a href="missing-values.html#number-of-missing-by-month"><i class="fa fa-check"></i><b>4.0.9</b> Number of missing by month</a></li>
 </ul></li>
 <li class="chapter" data-level="5" data-path="results.html"><a href="results.html"><i class="fa fa-check"></i><b>5</b> Results</a></li>
-<li class="chapter" data-level="6" data-path="interactive-component.html"><a href="interactive-component.html"><i class="fa fa-check"></i><b>6</b> Interactive component</a></li>
+<li class="chapter" data-level="6" data-path="interactive-component.html"><a href="interactive-component.html"><i class="fa fa-check"></i><b>6</b> Interactive component</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="interactive-component.html"><a href="interactive-component.html#introduction-1"><i class="fa fa-check"></i><b>6.1</b> Introduction</a></li>
+<li class="chapter" data-level="6.2" data-path="interactive-component.html"><a href="interactive-component.html#interactive-part"><i class="fa fa-check"></i><b>6.2</b> Interactive part</a></li>
+</ul></li>
 <li class="chapter" data-level="7" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>7</b> Conclusion</a></li>
 <li class="divider"></li>
 <li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
@@ -115,24 +119,19 @@
 <div id="read-the-data" class="section level3" number="4.0.1">
 <h3><span class="header-section-number">4.0.1</span> Read the data</h3>
 <p>We analyze the missing values of our data “Dog Bite Data” from <a href="https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg" class="uri">https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg</a>, which contains 10280 rows and 9 columns. We read the data and show the names of the 9 columns for analysis.</p>
-<pre><code>## [1] &quot;UniqueID&quot;   &quot;DateOfBite&quot; &quot;Species&quot;    &quot;Breed&quot;     
-## [5] &quot;Age&quot;        &quot;Gender&quot;     &quot;SpayNeuter&quot; &quot;Borough&quot;   
-## [9] &quot;ZipCode&quot;</code></pre>
+<pre><code>## [1] &quot;UniqueID&quot;   &quot;DateOfBite&quot; &quot;Species&quot;    &quot;Breed&quot;      &quot;Age&quot;        &quot;Gender&quot;     &quot;SpayNeuter&quot; &quot;Borough&quot;    &quot;ZipCode&quot;</code></pre>
 </div>
 <div id="missing-values-by-column" class="section level3" number="4.0.2">
 <h3><span class="header-section-number">4.0.2</span> Missing values by column</h3>
-<pre><code>##        Age    ZipCode      Breed   UniqueID DateOfBite 
-##       4746       2664       1587          0          0 
-##    Species     Gender SpayNeuter    Borough 
-##          0          0          0          0</code></pre>
+<pre><code>##        Age    ZipCode      Breed   UniqueID DateOfBite    Species     Gender SpayNeuter    Borough 
+##       4746       2664       1587          0          0          0          0          0          0</code></pre>
 <p>First, we show missing values by column. We could conclude that there are most missing values in “Age” while “ZipCode” and “Breed” come second and third. We can roughly analyze the possible reasons. Most of dog owners adopt or purchase their dogs, thus some of them may not be sure of the date of birth. Of course, dogs of some owners are born to the big dog at home, or they know the dogs’ birthday when they purchase them, but some owners are hard to know. This is a very common situation. In addition, many dog owners’ dogs may be hybrid breeds, or stray dogs adopted by owners. In these situations, owners may not be sure of the “breed” of their dogs. As for the “ZipCode”, dog bites may not always happen near the dog owners’ houses, so owners may not be familiar with the “ZipCode” there. Of course, many careful dog owners will inquire and fill in “ZipCode”, but others may not fill in it.</p>
 <p>All of other columns do not have any missing value. In class, Prof. Robbins mentioned that we could consider the connection between some columns, such as the address and the zipcode. In our data, we noticed that there is no connection of missing values between “ZipCode” and “Borough” according to the current analysis. We could not see any other connections right now.</p>
 </div>
 <div id="missing-values-by-row" class="section level3" number="4.0.3">
 <h3><span class="header-section-number">4.0.3</span> Missing values by row</h3>
 <p>Since we have 10280 rows, it is not clear if we continue analyzing with all of the data. Our data only contains one file, thus we randomly select 40 rows for analysis.</p>
-<pre><code>##  [1] 3 3 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0
-## [31] 0 0 0 0 0 0 0 0 0 0</code></pre>
+<pre><code>##  [1] 3 3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</code></pre>
 <p>Then we show missing values by row from large to small. We found that rows with the most missing values miss 3 values (i.e, “Age”, “ZipCode”, and “Breed”), while rows with the least missing values miss 0 value. There are only a small part of events in which all three values are missing.</p>
 </div>
 <div id="row-column-missing-patterns---heatmap" class="section level3" number="4.0.4">
@@ -159,30 +158,19 @@
 <pre><code>## [1] &quot;missing_data.frame&quot;
 ## attr(,&quot;package&quot;)
 ## [1] &quot;mi&quot;</code></pre>
-<pre><code>##  [1] nothing             Breed, Age          Age                
-##  [4] nothing             Breed, Age, ZipCode nothing            
-##  [7] nothing             Age                 nothing            
-## [10] nothing             ZipCode             Age, ZipCode       
-## [13] Age                 nothing             Age                
-## [16] nothing             Age, ZipCode        Age                
-## [19] Breed, Age, ZipCode Age                 Age, ZipCode       
-## [22] nothing             Age                 nothing            
-## [25] ZipCode             Breed, Age          Age, ZipCode       
-## [28] nothing             nothing             Age                
-## [31] ZipCode             Age                 nothing            
-## [34] Age                 Age                 nothing            
-## [37] Age                 nothing             nothing            
-## [40] nothing            
-## 6 Levels: nothing Age ZipCode Breed, Age ... Breed, Age, ZipCode</code></pre>
+<pre><code>##  [1] nothing             nothing             Age, ZipCode        nothing             Breed, Age, ZipCode Breed, Age         
+##  [7] nothing             Age                 Breed, Age, ZipCode Age                 Age                 Breed, Age         
+## [13] nothing             nothing             Age, ZipCode        nothing             nothing             nothing            
+## [19] Breed, Age          nothing             Age, ZipCode        Breed, Age, ZipCode Age, ZipCode        nothing            
+## [25] nothing             nothing             nothing             nothing             nothing             nothing            
+## [31] Age                 Breed, Age          ZipCode             Age, ZipCode        Age                 nothing            
+## [37] Age, ZipCode        nothing             Age                 Age                
+## Levels: nothing Age ZipCode Age, ZipCode Breed, Age Breed, Age, ZipCode</code></pre>
 <p>This part lists the situation of missing values of our 40 samples. Each one indicates the kinds of values that are missed in each sample.</p>
-<pre><code>## [1] &quot;nothing&quot;             &quot;Age&quot;                
-## [3] &quot;ZipCode&quot;             &quot;Breed, Age&quot;         
-## [5] &quot;Age, ZipCode&quot;        &quot;Breed, Age, ZipCode&quot;</code></pre>
+<pre><code>## [1] &quot;nothing&quot;             &quot;Age&quot;                 &quot;ZipCode&quot;             &quot;Age, ZipCode&quot;        &quot;Breed, Age&quot;          &quot;Breed, Age, ZipCode&quot;</code></pre>
 <p>This part lists all of the patterns above.</p>
-<pre><code>##             nothing                 Age             ZipCode 
-##                  17                  12                   3 
-##          Breed, Age        Age, ZipCode Breed, Age, ZipCode 
-##                   2                   4                   2</code></pre>
+<pre><code>##             nothing                 Age             ZipCode        Age, ZipCode          Breed, Age Breed, Age, ZipCode 
+##                  19                   7                   1                   6                   4                   3</code></pre>
 <p>This part shows the specific counts of patterns above.</p>
 <p>Then, we aim to create a missing values plot in the style of extracat::visna() (no longer available on CRAN) using ggplot2. First, we create the function for creating missing plots.</p>
 <p>Then we use the function to draw the plot. Note that we use the entire dataset instead of our 40 samples in this part for better discussion.</p>
@@ -199,7 +187,7 @@
 </div>
 <div id="missing-by-borough" class="section level3" number="4.0.7">
 <h3><span class="header-section-number">4.0.7</span> Missing by borough</h3>
-<pre><code>## # A tibble: 6 x 4
+<pre><code>## # A tibble: 6 × 4
 ##   Borough       num_bites num_na percent_na
 ##   &lt;chr&gt;             &lt;int&gt;  &lt;int&gt;      &lt;dbl&gt;
 ## 1 Bronx              1757    888       0.51
@@ -209,7 +197,7 @@
 ## 5 Staten Island       931    387       0.42
 ## 6 Other               437    181       0.41</code></pre>
 <p>First, we show the percent of missing values of “Age” in different boroughs. Note that we use the entire dataset instead of our 40 samples in this part for better discussion. Events in “Bronx” is most likely to miss “Age”. There is not a large difference between the percent of different boroughs.</p>
-<pre><code>## # A tibble: 6 x 4
+<pre><code>## # A tibble: 6 × 4
 ##   Borough       num_bites num_na percent_na
 ##   &lt;chr&gt;             &lt;int&gt;  &lt;int&gt;      &lt;dbl&gt;
 ## 1 Other               437    100       0.23
@@ -219,7 +207,7 @@
 ## 5 Queens             2520    331       0.13
 ## 6 Staten Island       931     74       0.08</code></pre>
 <p>Now we show the percent of missing values of “Breed” in different boroughs. Events in “Other” is most likely to miss “Breed”. One possible reason is that according to our discussion above, there is a connection between “ZipCode” and “Borough”, which indicates that if we do not know the specific borough, it is more likely to miss “ZipCode”. If we do not even know “ZipCode”, it indicates that the data has limited information about these dogs and dog bite events, so it is easy to miss “Breed”.</p>
-<pre><code>## # A tibble: 6 x 4
+<pre><code>## # A tibble: 6 × 4
 ##   Borough       num_bites num_na percent_na
 ##   &lt;chr&gt;             &lt;int&gt;  &lt;int&gt;      &lt;dbl&gt;
 ## 1 Other               437    236       0.54
@@ -229,7 +217,7 @@
 ## 5 Queens             2520    542       0.22
 ## 6 Brooklyn           2281    336       0.15</code></pre>
 <p>Then we show the percent of missing values of “ZipCode” in different boroughs. Events in “Other” is most likely to miss “ZipCode”. One possible reason is that according to our discussion above, there is a connection between “ZipCode” and “Borough”, which indicates that if we do not know the specific borough, it is more likely to miss “ZipCode”.</p>
-<pre><code>## # A tibble: 6 x 3
+<pre><code>## # A tibble: 6 × 3
 ##   Borough       meanAge percent_na
 ##   &lt;chr&gt;           &lt;dbl&gt;      &lt;dbl&gt;
 ## 1 Bronx             4.2       0.51
