@@ -1,6 +1,15 @@
+tab:unnamed-chunk-3
+tab:unnamed-chunk-4
 introduction
 data-sources
+dog-bite-data
+nyc-dog-licensing-data
+average-temperature-in-nyc-data
 data-transformation
+the-column-dateofbite
+the-column-breed
+the-column-age
+temperature-data-from-average-temperature-in-nyc-data
 missing-values
 read-the-data
 missing-values-by-column
@@ -12,6 +21,11 @@ missing-by-borough
 number-of-missing-by-year
 number-of-missing-by-month
 results
+analysis-of-breed
+analysis-of-borough
+analysis-of-time
+analysis-of-gender-spayneuter
+analysis-of-age
 interactive-component
 introduction-1
 interactive-part
