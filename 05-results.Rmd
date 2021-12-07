@@ -263,3 +263,121 @@ graph6 <- ggplot(data_for_draw_5, aes(Gender, SpayNeuter, fill= Number)) +
 
 graph6
 ```
+
+
+
+registered的狗的年龄 AND dog bite的分布对比
+licenced只取到2015-2017 年龄[0,20]
+```{r}
+DogRegDF = DogRegDF %>% 
+  separate(LicenseIssuedDate, sep = "/", into = c(NA,NA,"YearOfIssued"), remove = FALSE)
+DogRegDF$YearOfIssued = as.numeric(DogRegDF$YearOfIssued)
+DogRegDFt = subset(DogRegDF, YearOfIssued>=2015 & YearOfIssued<=2017)
+DogRegDFt = DogRegDF
+DogRegDFt$Age = DogRegDFt$YearOfIssued - DogRegDFt$AnimalBirthMonth
+DogRegDFt = subset(DogRegDFt, Age <= 20 & Age >= 0)
+DogBiteDFt = subset(DogBiteDF, Age <= 20 & Age >= 0)
+data_for_draw_6 = DogBiteDFt["Age"]
+data_for_draw_6$group = "Biting"
+temp = DogRegDFt["Age"]
+temp$group = "Licensed"
+data_for_draw_6 = rbind(data_for_draw_6, temp)
+
+graph7 = ggplot(data_for_draw_6, aes(x = Age, fill = group)) + 
+  geom_histogram(position = "identity", bins = 20) + 
+  facet_wrap(~ group, ncol = 1, scales="free_y") + 
+  labs(title = "Bite Count & Licensed Count by Age", xlab = "Age (Year)") + 
+  scale_fill_brewer(palette="Pastel1")
+
+graph8 = ggplot(data_for_draw_6, aes(x = Age, fill = group)) + 
+  geom_density(adjust = 1.5, alpha = 0.5) + 
+  facet_wrap(~ group, ncol = 1, scales="free_y") + 
+  labs(title = "Bite Count & Licensed Count Density Dist. by Age", xlab = "Age (Year)") + 
+  scale_fill_brewer(palette="Pastel1")
+
+graph7
+
+graph8
+```
+
+
+
+```{r}
+tempBite = DogBiteDF[c("YearOfBite","Gender")]
+tempLic = DogRegDF[c("YearOfIssued","AnimalGender")]
+colnames(tempLic)[2] = "Gender"
+colnames(tempLic)[1] = "Year"
+colnames(tempBite)[1] = "Year"
+tempLic$Gender[is.na(tempLic$Gender)] = "U"
+BiteC = tempBite %>% 
+  group_by(Gender) %>% 
+  count(name='count')
+LicC = tempLic %>% 
+  group_by(Gender) %>% 
+  count(name='count')
+# dog bite data
+BiteC["Proportion"] = BiteC$count/sum(BiteC$count)
+BiteC
+# Licence data
+LicC["Proportion"] = LicC$count/sum(LicC$count)
+LicC
+```
+
+
+
+```{r}
+tempBite$group = "Biting"
+tempLic$group = "Licensed"
+
+data_for_draw_7 = rbind(tempBite, tempLic)
+data_for_draw_7 = subset(data_for_draw_7, Year >= 2015 & Year <= 2017)
+
+graph9 = ggplot(data_for_draw_7, aes(x = Year, fill = Gender)) + 
+  geom_histogram(position = "dodge", bins = 3) + 
+  facet_wrap(~ group, ncol = 1, scales="free_y") + 
+  labs(title = "Bite Count & Licensed Count by Gender Each Year", xlab = "Age (Year)") + 
+  scale_fill_brewer(palette="Pastel1")
+
+graph9
+```
+
+
+
+```{r}
+DogRegDFtt = DogRegDF
+DogRegDFtt $ZipCode = as.numeric(DogRegDFtt $ZipCode)
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=10001 & DogRegDFtt$ZipCode <= 10282] = "Manhattan"
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=10451 & DogRegDFtt$ZipCode <= 10475] = "Bronx"
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=11201 & DogRegDFtt$ZipCode <= 11256] = "Brooklyn"
+DogRegDFtt$Borough[(DogRegDFtt$ZipCode>=11004 & DogRegDFtt$ZipCode <= 11109) | (DogRegDFtt$ZipCode>=11351 & DogRegDFtt$ZipCode <= 11697)] = "Queens"
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=10301 & DogRegDFtt$ZipCode <= 10314] = "Staten Island"
+LicT = DogRegDFtt[c("Borough")]
+LicT$group = "Licensed"
+BiteT = DogBiteDF[c("Borough")]
+BiteT$group = "Biting"
+data_for_draw8 = rbind(LicT, BiteT)
+graph10 = ggplot(data_for_draw8, aes(x = Borough, fill = group)) + 
+  geom_bar() + 
+  facet_wrap(~ group, ncol = 1, scales="free_y") + 
+  labs(title = "Bite Count & Licensed Count by Borough", xlab = "Age (Year)") + 
+  scale_fill_brewer(palette="Pastel1")
+graph10
+```
+
+
+
+```{r}
+t = data_for_draw_3%>%head(9)
+breedList = c(t$Breed)
+data_for_draw_9 = DogBiteDF[DogBiteDF$Breed %in% breedList,]
+data_for_draw_9 = subset(data_for_draw_9, Age >= 0 & Age <= 20)
+data_for_draw_9$Breed = str_wrap(data_for_draw_9$Breed, width = 15)
+graph11 = ggplot(data_for_draw_9, aes(x=Breed, y=Age, fill=Breed)) + 
+  geom_boxplot() +
+  labs(title = "Dog Bites on Age by Breed (Top 9)") + 
+  scale_fill_brewer(palette="Pastel1") +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) + NULL
+graph11
+```
+
+
