@@ -1,1 +1,66 @@
 # Data transformation
+Since we will only extract some information from the two auxiliary data sources to help analyze our main dataset, we mainly discuss the data transformation of the main dog bites dataset.
+
+## The column “DateOfBite”
+
+In our main dog bites dataset, the data type of the column named “DateOfBite” is “Date & Time”, e.g., “January 02, 2015”. In our analysis, we aim to discuss the passage of time in months, thus we extract the “year” and “month” from this column to add two new columns named “MonthOfBite” and “YearOfBite”. We show the original “DataOfBite” and the two new columns for some rows as follows.
+
+```{r, message=FALSE}
+library(pacman)
+p_load(tidyverse)
+p_load(lubridate)
+p_load(ggExtra)
+
+
+lct <- Sys.getlocale("LC_TIME")
+Sys.setlocale("LC_TIME", "C")
+
+DogBiteDF <- read_csv("DOHMH_Dog_Bite_Data.csv", na = c("", "NA","?"))
+Temperature <- read_csv("tempbymonth.csv", na = c("", "NA"))
+DogRegDF <- read_csv("NYC_Dog_Licensing_Dataset.csv")
+DogBiteDF <- DogBiteDF %>% 
+  mutate(MonthOfBite = month(strptime(pull(DogBiteDF, DateOfBite), 
+                                      format="%B %d %Y"))) %>% 
+  mutate(YearOfBite = year(strptime(pull(DogBiteDF, DateOfBite), 
+                                      format="%B %d %Y")))
+DogBiteDF[, c("DateOfBite", "MonthOfBite", "YearOfBite")]
+```
+
+## The column “Breed”
+
+Many rows contain an empty “Breed”, we transform them as “UNKNOWN”. We show the “Breed” column and it successfully shows “UNKNOWN” in some rows.
+
+```{r}
+DogBiteDF <- DogBiteDF %>% 
+  mutate(Breed = replace_na(Breed, 'UNKNOWN'))
+DogBiteDF[, c("Breed")]
+```
+
+## The column “Age”
+
+A few “Age” records are string not numeric, e.g., “7Y” that denotes 7 years and “7M” for 7 months. We drop any non-numeric characters in these records and convert ages in months to ages in years, e.g., convert “7M” to “7/12”. For empty ages, we use “-1” to denote them. We show the “Age” column as follows.
+
+```{r}
+DogBiteDF <- DogBiteDF %>% 
+  mutate(Age = if_else(grepl('Y|y', Age, fixed = TRUE),parse_number(Age),
+                       if_else(grepl('M|m', Age, fixed = TRUE), 
+                               parse_number(Age)/12, 
+                               parse_number(replace_na(Age,'-1')))))
+DogBiteDF[, c("Age")]
+```
+
+## Temperature data from Average Temperature in NYC Data
+
+We use our Average Temperature in NYC Data to obtain the corresponding temperature for each dog bite. We use “MonthOfBite” and “YearOfBite” to match our rows to the corresponding temperature, and add the corresponding temperature as a new column named “Avg_temp” to the main dog bites dataset. We show the “Avg_temp”, “MonthOfBite” and “YearOfBite” columns as follows.
+
+```{r}
+Temperature <- Temperature %>% 
+  pivot_longer(!Year, names_to = "Month", 
+               names_transform = list(Month = as.integer),
+               values_to = "Avg_temp",
+               values_drop_na = TRUE)
+
+DogBiteDF <- DogBiteDF %>% left_join(., Temperature, 
+                                     by=c('MonthOfBite'='Month', 'YearOfBite'='Year'), suffix = c("_x", "_y"))
+DogBiteDF[, c("Avg_temp","MonthOfBite","YearOfBite")]
+```
