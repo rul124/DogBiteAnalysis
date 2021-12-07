@@ -13,4 +13,6 @@ number-of-missing-by-year
 number-of-missing-by-month
 results
 interactive-component
+introduction-1
+interactive-part
 conclusion

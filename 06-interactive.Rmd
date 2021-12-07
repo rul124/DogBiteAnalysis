@@ -1,3 +1,7 @@
 # Interactive component
 
+## Introduction
+For this part, we plot the pie chart indicating the Top 9 proportion of dog bites accidents caused divided by breeds. To interact with the plot, you can move mouse over the proportion that interests you the best and the breed name with its value of dog bites between 2015 and 2017 will be shown.
 
+## Interactive part
+<iframe src="piechart.html" width="1000" height="700"></iframe>

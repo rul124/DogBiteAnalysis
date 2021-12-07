@@ -9,9 +9,10 @@ Ziyu Fang (zf2253); Xiaorui Qin (xq2209); Ruoxi Liu (rl3155)
 ## Data Lists:
 Dog Bite Data: (Main Dataset)\
  https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg \
-NYC Dog Licensing Data: （Auxiliary Dataset)\
+NYC Dog Licensing Data: (Auxiliary Dataset)\
 https://data.cityofnewyork.us/Health/NYC-Dog-Licensing-Dataset/nu7n-tubp \
-NYC Weather Data: (Auxiliary Dataset)\
+
+NYC Weather Data: (Auxiliary Dataset) (to be decided) \
 https://www.weather.gov/wrh/climate?wfo=okx
 
 
@@ -26,7 +27,6 @@ If there indeed exists a relationship between dog bites and some specific featur
 
 2. In the existing dog bites dataset, we can see the breed with the highest proportion of biting people. In order to see if the reason behind it is about its higher population among all dogs or simply about this breed’s natural potential of being aggressive, we could use the auxiliary dataset (NYC Dog Licensing Dataset), which is much larger than the dog bites dataset, to roughly estimate the population composition of different breeds and analyze the above question. 
 With this exploration, we can have a clearer picture of the relationship between breeds and its potential aggressiveness. We do not want to make a rash decision of naming some breeds “aggressive ones” without comparing the proportion. In order to give a more scientific answer, this step is unignorable. 
-
 
 3. We want to have a classifier that, given the breed, age, gender, neuter situation, borough, and Zipcode of a certain dog, could we predict the probability of a dog attacking people? 
 We will divide our data into the training set and the testing set. A classifier will be trained and tested for dog bites, which could assist the Health Department to roughly get an idea of what kind of dogs are more dangerous. 
