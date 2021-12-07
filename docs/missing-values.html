@@ -153,7 +153,7 @@
 <div id="missing-values-by-row" class="section level2" number="4.3">
 <h2><span class="header-section-number">4.3</span> Missing values by row</h2>
 <p>Since we have 10280 rows, it is not clear if we continue analyzing with all of the data. Our data only contains one file, thus we randomly select 40 rows for analysis.</p>
-<pre><code>##  [1] 3 3 3 3 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0
+<pre><code>##  [1] 3 3 3 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0
 ## [31] 0 0 0 0 0 0 0 0 0 0</code></pre>
 <p>Then we show missing values by row from large to small. We found that rows with the most missing values miss 3 values (i.e, “Age”, “ZipCode”, and “Breed”), while rows with the least missing values miss 0 value. There are only a small part of events in which all three values are missing.</p>
 </div>
@@ -181,20 +181,20 @@
 <pre><code>## [1] &quot;missing_data.frame&quot;
 ## attr(,&quot;package&quot;)
 ## [1] &quot;mi&quot;</code></pre>
-<pre><code>##  [1] Age, ZipCode        Age                 nothing            
-##  [4] ZipCode             nothing             nothing            
-##  [7] Age                 nothing             Breed, Age, ZipCode
-## [10] nothing             Breed, Age          Age, ZipCode       
-## [13] nothing             nothing             Age, ZipCode       
-## [16] nothing             nothing             nothing            
-## [19] nothing             nothing             ZipCode            
-## [22] Breed, Age          Breed, Age, ZipCode nothing            
-## [25] Breed, Age, ZipCode nothing             Breed, Age         
-## [28] Breed, Age          Breed, Age          nothing            
-## [31] Breed, Age, ZipCode Age, ZipCode        Age                
-## [34] Age                 nothing             nothing            
-## [37] nothing             nothing             nothing            
-## [40] ZipCode            
+<pre><code>##  [1] Age                 Breed, Age, ZipCode nothing            
+##  [4] nothing             Age, ZipCode        Age                
+##  [7] ZipCode             Age                 nothing            
+## [10] nothing             Age                 nothing            
+## [13] Breed, Age, ZipCode ZipCode             nothing            
+## [16] nothing             nothing             Age, ZipCode       
+## [19] Breed, Age, ZipCode ZipCode             Age                
+## [22] Age, ZipCode        nothing             nothing            
+## [25] nothing             Age                 nothing            
+## [28] Age, ZipCode        ZipCode             nothing            
+## [31] Breed, Age          Age                 nothing            
+## [34] nothing             nothing             Age, ZipCode       
+## [37] ZipCode             nothing             Age                
+## [40] nothing            
 ## 6 Levels: nothing Age ZipCode Age, ZipCode ... Breed, Age, ZipCode</code></pre>
 <p>This part lists the situation of missing values of our 40 samples. Each one indicates the kinds of values that are missed in each sample.</p>
 <pre><code>## [1] &quot;nothing&quot;             &quot;Age&quot;                
@@ -202,9 +202,9 @@
 ## [5] &quot;Breed, Age&quot;          &quot;Breed, Age, ZipCode&quot;</code></pre>
 <p>This part lists all of the patterns above.</p>
 <pre><code>##             nothing                 Age             ZipCode 
-##                  20                   4                   3 
+##                  18                   8                   5 
 ##        Age, ZipCode          Breed, Age Breed, Age, ZipCode 
-##                   4                   5                   4</code></pre>
+##                   5                   1                   3</code></pre>
 <p>This part shows the specific counts of patterns above.</p>
 <p>Then, we aim to create a missing values plot in the style of extracat::visna() (no longer available on CRAN) using ggplot2. First, we create the function for creating missing plots.</p>
 <p>Then we use the function to draw the plot. Note that we use the entire dataset instead of our 40 samples in this part for better discussion.</p>
