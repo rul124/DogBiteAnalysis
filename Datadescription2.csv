@@ -1,0 +1,12 @@
+Column,Description,Type
+RowNumber,Row number,Number
+AnimalName,User-provided dog name (unless specified otherwise),Plain Text
+AnimalGender,M (Male) or F (Female) dog gender,Plain Text
+AnimalBirthMonth,Month and year dog was born,Plain Text
+BreedName,Dog breed,Plain Text
+Borough,Owner Borough,Plain Text
+ZipCode,Owner zip code,Number
+LicenseIssuedDate,Date the dog license was issued,Date & Time
+LicenseExpiredDate,Date the dog license expires,Date & Time
+Extract Year,Extract Year,Plain Text
+Unique Dog ID,Unique Dog ID,Plain Text
