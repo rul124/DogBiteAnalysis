@@ -265,9 +265,6 @@ graph6
 ```
 
 
-
-registered的狗的年龄 AND dog bite的分布对比
-licenced只取到2015-2017 年龄[0,20]
 ```{r}
 DogRegDF = DogRegDF %>% 
   separate(LicenseIssuedDate, sep = "/", into = c(NA,NA,"YearOfIssued"), remove = FALSE)
