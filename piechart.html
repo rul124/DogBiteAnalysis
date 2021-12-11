@@ -6,6 +6,13 @@
         <script src="https://d3js.org/d3.v6.js"></script>
     </head>
     <body>
+        <!-- Create buttons to display different data -->
+        <button onclick = "update(data)">New York City</button>
+        <button onclick = "update(data_Brooklyn)">Brooklyn</button>
+        <button onclick = "update(data_Bronx)">Bronx</button>
+        <button onclick = "update(data_Manhattan)">Manhattan</button>
+        <button onclick = "update(data_Queens)">Queens</button>
+        <button onclick = "update(data_Staten_Island)">Staten Island</button>
         <!-- Create a div where the graph will take place -->
         <div id="my_dataviz"></div>
         <div id="Description">
@@ -14,23 +21,6 @@
             </p>
         </div>
         <script>
-
-            // set the dimensions and margins of the graph
-            var width = 450,
-                height = 450,
-                margin = 40;
-            
-            // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
-            var radius = Math.min(width, height) / 2 - margin
-            
-            // append the svg object to the div called 'my_dataviz'
-            var svg = d3.select("#my_dataviz")
-                .append("svg")
-                    .attr("width", width)
-                    .attr("height", height)
-                .append("g")
-                    .attr("transform", `translate(${width / 2}, ${height / 2})`);
-
             // Create data
             var data = {"Pit Bull": 1921,
                           "UNKNOWN": 1756, 
@@ -42,10 +32,129 @@
                           "Mixed/Other": 262,
                           "Yorkshire Terrier": 228
                         }
+            var data_Brooklyn = {"UNKNOWN": 380,
+                                  "Pit Bull": 301, 
+                                  "American Pit Bull Terrier/Pit Bull": 213,
+                                  "American Pit Bull Mix/Pit Bull Mix":106,
+                                  "Shih Tzu": 72,
+                                  "Chihuahua": 70,
+                                  "German Shepherd": 63,
+                                  "Yorkshire Terrier": 55,
+                                  "Mixed": 45
+                                }
+            var data_Bronx = {"Pit Bull": 564,
+                                "UNKNOWN": 256,
+                                "Chihuahua": 94,
+                                "Shih Tzu": 87,
+                                "American Pit Bull Mix/Pit Bull Mix":56,
+                                "Yorkshire Terrier": 43,
+                                "Rott Weiler": 37,
+                                "Mixed/Other": 36,
+                                "American Pit Bull Terrier/Pit Bull": 35
+                              }
+            var data_Queens = {"Pit Bull": 489, 
+                                "UNKNOWN": 443,
+                                "German Shepherd": 92,
+                                "Chihuahua": 79,
+                                "Shi Tzu": 76,
+                                "Maltese": 67,
+                                "American Pit Bull Terrier/Pit Bull": 56,
+                                "Yorkshire Terrier": 55,
+                                "Siberian Husky": 54
+                                }
+            var data_Staten_Island = {"Pit Bull": 211, 
+                                        "UNKNOWN": 75,
+                                        "German Shepherd": 42,
+                                        "Mixed/Other": 35,
+                                        "Shi Tzu": 34,
+                                        "American Pit Bull Mix/Pit Bull Mix":32,
+                                        "Chihuahua":30,
+                                        "Labrador Retriever": 28,
+                                        "Rott Weiler": 28
+                                    }
+            var data_Manhattan = {"UNKNOWN": 500,
+                                   "Pit Bull": 321,
+                                   "Mixed/Other": 112,
+                                   "American Pit Bull Mix/Pit Bull Mix": 84,
+                                   "Shi Tzu": 75,
+                                   "Chihuahua": 65,
+                                   "Labrador Retriever": 51,
+                                   "Yorkshire Terrier": 42,
+                                   "Bull Dog": 41
+                                }
+                                
+            var width = 450,
+                height = 450,
+                margin = 40;
             
-            // set the color scale
+            var radius = Math.min(width, height) / 2 - margin
+            var innerRadius = Math.min(width, height) / 3 - margin
+            var svg = d3.select("#my_dataviz")
+                .attr("align", "center")
+                .append("svg")
+                    .attr("width", width)
+                    .attr("height", height)
+                .append("g")
+                    .attr("transform", `translate(${width/2}, ${height/2})`);
+                    
+            // Create Initial Plot
             var color = d3.scaleOrdinal().range(d3.schemeSet1);
+            var pie = d3.pie().value(function(d) {return d[1]})
+            var data_ready = pie(Object.entries(data))
+            // Now I know that group A goes from 0 degrees to x degrees and so on.
 
+            // shape helper to build arcs:
+            var arcGenerator = d3.arc()
+                .innerRadius(0)
+                .outerRadius(radius)
+            
+            var div = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("opacity", 0);
+
+            // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+            svg.selectAll('mySlices')
+                .data(data_ready)
+                .join('path')
+                    .attr('d', arcGenerator)
+                    .attr('fill', function(d){ return(color(d.data[0])) })
+                    .attr("stroke", "white")
+                    .style("stroke-width", "2px")
+                    .style("opacity", .8)
+                .on('mouseover', function(event, d) {
+                    d3.select(this).transition()
+                        .duration('50')
+                        .style('opacity', '2');
+                    // d3.select("#Description").select("p").text(function(d,i){return (d.data +" " + names[i]);});
+                    // console.log(d.data[0], d.data[1]);
+                    div.transition()
+                        .duration(200)
+                        .style("opacity", .9);
+                    div.html(d.data[0] + ": " + d.data[1])
+                        .style("left", (event.pageX) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on('mouseout', function(event, d) {
+                    d3.select(this).transition()
+                        .duration('50')
+                        .style('opacity', '.5');
+                    div.transition()
+                        .duration(500)
+                        .style("opacity", 0);
+                })
+                
+            // Build the pie chart using function
+            function update(data) {
+                // set the color scale
+                var data_ready = pie(Object.entries(data))
+                
+                // Build the pie chart
+                svg.datum(data_ready).selectAll("path")
+                    .data(data)
+                
+            }
+            // update(data);
+            /*
             // Compute the position of each group on the pie:
             var pie = d3.pie().value(function(d) {return d[1]})
             var data_ready = pie(Object.entries(data))
@@ -90,6 +199,7 @@
                         .duration(500)
                         .style("opacity", 0);
                 })
+        */
         </script>
     </body>
 </html>

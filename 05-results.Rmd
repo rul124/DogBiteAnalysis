@@ -364,17 +364,25 @@ graph10
 
 
 ```{r}
-t = data_for_draw_3%>%head(9)
+t = DogBiteDF %>% 
+  group_by(Breed) %>% 
+  count(name='count') %>% 
+  arrange(desc(count)) %>% 
+  head(9)
 breedList = c(t$Breed)
 data_for_draw_9 = DogBiteDF[DogBiteDF$Breed %in% breedList,]
 data_for_draw_9 = subset(data_for_draw_9, Age >= 0 & Age <= 20)
-data_for_draw_9$Breed = str_wrap(data_for_draw_9$Breed, width = 15)
+data_for_draw_9$Breed = str_wrap(data_for_draw_9$Breed, width = 10)
 graph11 = ggplot(data_for_draw_9, aes(x=Breed, y=Age, fill=Breed)) + 
   geom_boxplot() +
   labs(title = "Dog Bites on Age by Breed (Top 9)") + 
   scale_fill_brewer(palette="Pastel1") +
   scale_x_discrete(guide = guide_axis(n.dodge = 2)) + NULL
 graph11
+```
+
+```{r}
+bookdown::render_book("05-results.Rmd")
 ```
 
 
