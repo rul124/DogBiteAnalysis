@@ -1,0 +1,10 @@
+Column,Description,Type
+UniqueID,Unique dog bite case identifier,Number
+DateOfBite,Date bitten,Date & Time
+Species,Animal Type (Dog),Plain Text
+Breed,Breed type,Plain Text
+Age,Dog's age at time of bite. Numbers with 'M' indicate months.,Plain Text
+Gender,"Sex of Dog. M=Male, F=Female, U=Unknown",Plain Text
+SpayNeuter,"Surgical removal of dog's reproductive organs (Y/N). Y=Yes (Spayed or Neutered), N = No (Not Spayed or Neutered)",Checkbox
+Borough,Dog bite Borough. Other' indicates that the bite took place outside New York City,Plain Text
+ZipCode,Dog bite Zipcode. Blank ZipCode indicates that information was not available,Plain Text

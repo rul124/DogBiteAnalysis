@@ -4,44 +4,81 @@
         <meta charset="utf-8">
         <!-- Load d3.js -->
         <script src="https://d3js.org/d3.v6.js"></script>
+        <style>
+          .buttons {
+            text-align: center;  
+            border: 7px solid red;  
+            width: 300px;  
+            height: 200px;  
+            padding-top: 100px;  
+            padding-bottom: 100px;
+          }
+          button {
+            background-color: #4CAF50; /* Green */
+            border: 10px;
+            color: white;
+            padding: 10px 30px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 10px;
+            border-radius: 3px;
+          }
+          button:focus {
+            background-color: #D6BBB0;
+          }
+        </style>
     </head>
     <body>
         <!-- Create buttons to display different data -->
-        <button onclick = "update(data)">New York City</button>
-        <button onclick = "update(data_Brooklyn)">Brooklyn</button>
-        <button onclick = "update(data_Bronx)">Bronx</button>
-        <button onclick = "update(data_Manhattan)">Manhattan</button>
-        <button onclick = "update(data_Queens)">Queens</button>
-        <button onclick = "update(data_Staten_Island)">Staten Island</button>
+        <div id = "buttons">
+          <button class="center" onclick = "update(data)" autofocus>New York City</button>
+          <button class="center" onclick = "update(data_Brooklyn)">Brooklyn</button>
+          <button class="center" onclick = "update(data_Bronx)">Bronx</button>
+          <button class="center" onclick = "update(data_Manhattan)">Manhattan</button>
+          <button class="center" onclick = "update(data_Queens)">Queens</button>
+          <button class="center" onclick = "update(data_Staten_Island)">Staten Island</button>
+        </div>
         <!-- Create a div where the graph will take place -->
         <div id="my_dataviz"></div>
-        <div id="Description">
-            <p>
-                You can select a part you are curious about! :) We will show you the data!
-            </p>
-        </div>
         <script>
-            // Create data
-            var data = {"Pit Bull": 1921,
-                          "UNKNOWN": 1756, 
-                          "Shih Tzu": 364, 
-                          "American Pit Bull Terrier/Pit Bull": 349,
-                          "Chihuahua": 344,
-                          "American Pit Bull Mix/Pit Bull Mix":340,
-                          "German Shepherd": 274,
-                          "Mixed/Other": 262,
-                          "Yorkshire Terrier": 228
-                        }
-            var data_Brooklyn = {"UNKNOWN": 380,
-                                  "Pit Bull": 301, 
-                                  "American Pit Bull Terrier/Pit Bull": 213,
-                                  "American Pit Bull Mix/Pit Bull Mix":106,
-                                  "Shih Tzu": 72,
-                                  "Chihuahua": 70,
-                                  "German Shepherd": 63,
-                                  "Yorkshire Terrier": 55,
-                                  "Mixed": 45
-                                }
+                        
+            // set the dimensions and margins of the graph
+            const width = 900,
+                height = 450,
+                margin = 40;
+            
+            // The radius of the pieplot is half the width or half the height (smallest one). I subtract a bit of margin.
+            const radius = Math.min(width, height) / 2 - margin;
+            
+            // append the svg object to the div called 'my_dataviz'
+            const svg = d3.select("#my_dataviz")
+              .attr("align", "center")
+              .append("svg")
+                .attr("width", width)
+                .attr("height", height)
+              .append("g")
+                .attr("transform", `translate(${width/2}, ${height/2})`);
+            
+            const data = {"Pit Bull": 1921,
+                                      "UNKNOWN": 1756, 
+                                      "Shih Tzu": 364, 
+                                      "American Pit Bull Terrier/Pit Bull": 349,
+                                      "Chihuahua": 344,
+                                      "American Pit Bull Mix/Pit Bull Mix":340,
+                                      "German Shepherd": 274,
+                                      "Mixed/Other": 262,
+                                      "Yorkshire Terrier": 228
+                                    }
+            const data_Brooklyn = {"UNKNOWN": 380,
+                            "Pit Bull": 301, 
+                            "American Pit Bull Terrier/Pit Bull": 213,
+                            "American Pit Bull Mix/Pit Bull Mix":106,
+                            "Shih Tzu": 72,
+                            "Chihuahua": 70,
+                            "German Shepherd": 63,
+                           "Yorkshire Terrier": 55,
+                           "Mixed": 45}
             var data_Bronx = {"Pit Bull": 564,
                                 "UNKNOWN": 256,
                                 "Chihuahua": 94,
@@ -82,124 +119,101 @@
                                    "Yorkshire Terrier": 42,
                                    "Bull Dog": 41
                                 }
-                                
-            var width = 450,
-                height = 450,
-                margin = 40;
             
-            var radius = Math.min(width, height) / 2 - margin
-            var innerRadius = Math.min(width, height) / 3 - margin
-            var svg = d3.select("#my_dataviz")
-                .attr("align", "center")
-                .append("svg")
-                    .attr("width", width)
-                    .attr("height", height)
-                .append("g")
-                    .attr("transform", `translate(${width/2}, ${height/2})`);
-                    
-            // Create Initial Plot
-            var color = d3.scaleOrdinal().range(d3.schemeSet1);
-            var pie = d3.pie().value(function(d) {return d[1]})
-            var data_ready = pie(Object.entries(data))
-            // Now I know that group A goes from 0 degrees to x degrees and so on.
-
-            // shape helper to build arcs:
-            var arcGenerator = d3.arc()
-                .innerRadius(0)
-                .outerRadius(radius)
+            // set the color scale
+            const color = d3.scaleOrdinal()
+              .range(["#ce5d68", "#f7969a", "#D6BBB0", "#FFAD46", "#FAD165", "#FBE983"
+              ,"#69AD9D", "#16A765", "#2D807A"]);
             
-            var div = d3.select("body").append("div")
-                .attr("class", "tooltip")
-                .style("opacity", 0);
-
-            // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
-            svg.selectAll('mySlices')
-                .data(data_ready)
-                .join('path')
-                    .attr('d', arcGenerator)
-                    .attr('fill', function(d){ return(color(d.data[0])) })
-                    .attr("stroke", "white")
-                    .style("stroke-width", "2px")
-                    .style("opacity", .8)
-                .on('mouseover', function(event, d) {
-                    d3.select(this).transition()
-                        .duration('50')
-                        .style('opacity', '2');
-                    // d3.select("#Description").select("p").text(function(d,i){return (d.data +" " + names[i]);});
-                    // console.log(d.data[0], d.data[1]);
-                    div.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    div.html(d.data[0] + ": " + d.data[1])
-                        .style("left", (event.pageX) + "px")
-                        .style("top", (event.pageY - 28) + "px");
-                })
-                .on('mouseout', function(event, d) {
-                    d3.select(this).transition()
-                        .duration('50')
-                        .style('opacity', '.5');
-                    div.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                })
-                
-            // Build the pie chart using function
+            // A function that create / update the plot for a given variable:
             function update(data) {
-                // set the color scale
-                var data_ready = pie(Object.entries(data))
-                
-                // Build the pie chart
-                svg.datum(data_ready).selectAll("path")
-                    .data(data)
-                
-            }
-            // update(data);
-            /*
-            // Compute the position of each group on the pie:
-            var pie = d3.pie().value(function(d) {return d[1]})
-            var data_ready = pie(Object.entries(data))
-            // Now I know that group A goes from 0 degrees to x degrees and so on.
-
-            // shape helper to build arcs:
-            var arcGenerator = d3.arc()
-                .innerRadius(0)
-                .outerRadius(radius)
+              
+              // Compute the position of each group on the pie:
+              const pie = d3.pie()
+                .value(function(d) {return d[1]; }) // This make sure that group order remains the same in the pie chart
+              const data_ready = pie(Object.entries(data))
             
-            var div = d3.select("body").append("div")
-                .attr("class", "tooltip")
-                .style("opacity", 0);
-
-            // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
-            svg.selectAll('mySlices')
+              // map to data
+              const u = svg.selectAll("path")
                 .data(data_ready)
+            
+              // Build the pie chart: Basically, each part of the pie is a path that we build using the arc function.
+              u
                 .join('path')
-                    .attr('d', arcGenerator)
-                    .attr('fill', function(d){ return(color(d.data[0])) })
-                    .attr("stroke", "black")
-                    .style("stroke-width", "2px")
-                    .style("opacity", .5)
+                .transition()
+                .duration(1000)
+                .attr('d', d3.arc()
+                  .innerRadius(100)
+                  .outerRadius(radius)
+                )
+                .attr('fill', function(d){ return(color(d.data[1])) })
+                .attr("stroke", "white")
+                .style("stroke-width", "2px")
+                .style("opacity", .75)
+              
+              // The arc generator
+              var arc = d3.arc()
+                .innerRadius(radius * 0.5)         // This is the size of the donut hole
+                .outerRadius(radius * 0.8)
+              
+              var outerArc = d3.arc()
+                  .innerRadius(radius * 0.9)
+                  .outerRadius(radius * 0.9)
+              
+              svg.selectAll('polyline').remove();
+              svg.selectAll('text').remove();
+              
+              // Text Labels
+              svg
+                .selectAll('allPolylines')
+                .data(data_ready)
+                .join('polyline')
+                .transition()
+                .duration(1000)
+                  .attr("stroke", "grey")
+                  .style("fill", "none")
+                  .attr("stroke-width", 1)
+                  .attr('points', function(d) {
+                    const posA = arc.centroid(d)
+                    const posB = outerArc.centroid(d)
+                    const posC = outerArc.centroid(d);
+                    const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
+                    posC[0] = radius * 0.95 * (midangle < Math.PI ? 1 : -1);
+                    return [posA, posB, posC]
+                  })
+              
+              // Add the polylines between chart and labels:
+              svg
+                .selectAll('allLabels')
+                .data(data_ready)
+                .join('text')
+                .transition()
+                .duration(1000)
+                  .text(d => d.data[0] + ": " + d.data[1])
+                  .attr('transform', function(d) {
+                      const pos = outerArc.centroid(d);
+                      const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
+                      pos[0] = radius * 0.99 * (midangle < Math.PI ? 1 : -1);
+                      return `translate(${pos})`;
+                  })
+                  .style('text-anchor', function(d) {
+                      const midangle = d.startAngle + (d.endAngle - d.startAngle) / 2
+                      return (midangle < Math.PI ? 'start' : 'end')
+                  })
+            }
+            // Initialize the plot with the first dataset
+            update(data)
+            const u = svg.selectAll("path")
                 .on('mouseover', function(event, d) {
                     d3.select(this).transition()
                         .duration('50')
                         .style('opacity', '2');
-                    // d3.select("#Description").select("p").text(function(d,i){return (d.data +" " + names[i]);});
-                    // console.log(d.data[0], d.data[1]);
-                    div.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                    div.html(d.data[0] + ": " + d.data[1])
-                        .style("left", (event.pageX) + "px")
-                        .style("top", (event.pageY - 28) + "px");
                 })
                 .on('mouseout', function(event, d) {
                     d3.select(this).transition()
                         .duration('50')
-                        .style('opacity', '.5');
-                    div.transition()
-                        .duration(500)
-                        .style("opacity", 0);
+                        .style('opacity', '.75');
                 })
-        */
         </script>
     </body>
 </html>

@@ -5,5 +5,5 @@ For this part, we plot the doughnut chart indicating the Top 9 proportion of dog
 
 ## Interactive Part
 ```{r cars}
-htmltools::includeHTML("try.html")
+htmltools::includeHTML("piechart.html")
 ```
