@@ -5,11 +5,12 @@ data-sources
 dog-bite-data
 nyc-dog-licensing-data
 average-temperature-in-nyc-data
+issues-with-the-data
 data-transformation
 the-column-dateofbite
 the-column-breed
-the-column-age
 temperature-data-from-average-temperature-in-nyc-data
+bourough-data-in-nyc-dog-licensing-dataset
 missing-values
 read-the-data
 missing-values-by-column
@@ -26,6 +27,7 @@ analysis-of-borough
 analysis-of-time
 analysis-of-gender-spayneuter
 analysis-of-age
+summary
 interactive-component
 introduction-1
 interactive-part

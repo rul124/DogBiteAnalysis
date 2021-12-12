@@ -79,13 +79,14 @@
 <li class="chapter" data-level="2.1" data-path="data-sources.html"><a href="data-sources.html#dog-bite-data"><i class="fa fa-check"></i><b>2.1</b> Dog Bite Data</a></li>
 <li class="chapter" data-level="2.2" data-path="data-sources.html"><a href="data-sources.html#nyc-dog-licensing-data"><i class="fa fa-check"></i><b>2.2</b> NYC Dog Licensing Data</a></li>
 <li class="chapter" data-level="2.3" data-path="data-sources.html"><a href="data-sources.html#average-temperature-in-nyc-data"><i class="fa fa-check"></i><b>2.3</b> Average Temperature in NYC Data</a></li>
+<li class="chapter" data-level="2.4" data-path="data-sources.html"><a href="data-sources.html#issues-with-the-data"><i class="fa fa-check"></i><b>2.4</b> Issues with the data</a></li>
 </ul></li>
 <li class="chapter" data-level="3" data-path="data-transformation.html"><a href="data-transformation.html"><i class="fa fa-check"></i><b>3</b> Data transformation</a>
 <ul>
 <li class="chapter" data-level="3.1" data-path="data-transformation.html"><a href="data-transformation.html#the-column-dateofbite"><i class="fa fa-check"></i><b>3.1</b> The column “DateOfBite”</a></li>
 <li class="chapter" data-level="3.2" data-path="data-transformation.html"><a href="data-transformation.html#the-column-breed"><i class="fa fa-check"></i><b>3.2</b> The column “Breed”</a></li>
-<li class="chapter" data-level="3.3" data-path="data-transformation.html"><a href="data-transformation.html#the-column-age"><i class="fa fa-check"></i><b>3.3</b> The column “Age”</a></li>
-<li class="chapter" data-level="3.4" data-path="data-transformation.html"><a href="data-transformation.html#temperature-data-from-average-temperature-in-nyc-data"><i class="fa fa-check"></i><b>3.4</b> Temperature data from Average Temperature in NYC Data</a></li>
+<li class="chapter" data-level="3.3" data-path="data-transformation.html"><a href="data-transformation.html#temperature-data-from-average-temperature-in-nyc-data"><i class="fa fa-check"></i><b>3.3</b> Temperature data from Average Temperature in NYC Data</a></li>
+<li class="chapter" data-level="3.4" data-path="data-transformation.html"><a href="data-transformation.html#bourough-data-in-nyc-dog-licensing-dataset"><i class="fa fa-check"></i><b>3.4</b> Bourough data in NYC Dog Licensing Dataset</a></li>
 </ul></li>
 <li class="chapter" data-level="4" data-path="missing-values.html"><a href="missing-values.html"><i class="fa fa-check"></i><b>4</b> Missing values</a>
 <ul>
@@ -106,6 +107,7 @@
 <li class="chapter" data-level="5.3" data-path="results.html"><a href="results.html#analysis-of-time"><i class="fa fa-check"></i><b>5.3</b> Analysis of Time</a></li>
 <li class="chapter" data-level="5.4" data-path="results.html"><a href="results.html#analysis-of-gender-spayneuter"><i class="fa fa-check"></i><b>5.4</b> Analysis of Gender / SpayNeuter</a></li>
 <li class="chapter" data-level="5.5" data-path="results.html"><a href="results.html#analysis-of-age"><i class="fa fa-check"></i><b>5.5</b> Analysis of Age</a></li>
+<li class="chapter" data-level="5.6" data-path="results.html"><a href="results.html#summary"><i class="fa fa-check"></i><b>5.6</b> Summary</a></li>
 </ul></li>
 <li class="chapter" data-level="6" data-path="interactive-component.html"><a href="interactive-component.html"><i class="fa fa-check"></i><b>6</b> Interactive component</a>
 <ul>
@@ -134,6 +136,11 @@
             <section class="normal" id="section-">
 <div id="conclusion" class="section level1" number="7">
 <h1><span class="header-section-number">Chapter 7</span> Conclusion</h1>
+<p>With our analysis, we have a deeper understanding of the relationships between dog bites and breeds, boroughs, time, genders, spayed/neutered status, and ages, which could assist the management department and dog owners have more targeted control and care for dogs.</p>
+<p>Our analysis of breeds have found that the breed with the highest proportion of biting people is “Pit Bull”. To figure out if the reason behind it is about its higher population among all dogs in NYC or simply about this breed’s natural potential of being aggressive, we use the NYC Dog Licensing Dataset and we think the reason may be the aggression of Pit Bulls. Follow this approach of combining our data and the population composition of dogs, we analyze the relationships between dog bites and other characteristics. There are many revealing findings. The “Queens” has the largest number of dog bites and we think this may due to the inadequate management or related policies in this borough. The aggression of dogs may be related to temperature. The higher the temperature, the more dog bites. Dogs of unknown gender are more likely to bite people and spayed/neutered status will not influence the number of dog bites a lot for male dogs and female dogs. We also think that male dogs may have greater natural potential of being aggressive than female dogs. Younger (i.e., 1-5 years old) dogs are more likely to bite people.</p>
+<p>These findings could remind the dog’s owners to pay closer attention to their dogs while walking them in conditions that are proven to be more likely to make their dogs aggressive. For example, if you walk a young male Pit Bull in Queens in a hot summer day, you should control it better since it is more aggressive according to our analysis. Our findings are also beneficial for the management department. For example, they could analyze the reason of the high proportion of dog bites in Queens and improve the management or policies.</p>
+<p>Our analysis is limited to some extent. First, the data is not entirely satisfactory. For example, if we could match each dog in Dog Bite Data to its license in NYC Dog Licensing Data, we could have the data of “dogs that bite people” and “dogs that do not bite people”. Then we could train a classifier that, given the breed, age, gender, neuter situation, borough, and Zipcode of a certain dog, to predict the probability of a dog attacking people. Second, our analysis also has some limitations. For example, we did not find many relationships between different characteristics of dogs that bite people. We also stop analyzing the dog bites in different boroughs since we are not familiar with specific management or policies in these boroughs.</p>
+<p>In the future, we will find more useful data sources to help us further analyze the characteristics of dog bite events. If we could find a data source for licensed dogs with the column “Bite or Not”, we would try to train the classifier mentioned above to predict the dog bite event. We also realize that we have some deficiencies in many Data Analysis and Visualization tools, so we could not choose the best tool in the specific situation sometimes. We will gain a more thorough understanding of the related knowledge.</p>
 
 </div>
             </section>

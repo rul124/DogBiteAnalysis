@@ -79,13 +79,14 @@
 <li class="chapter" data-level="2.1" data-path="data-sources.html"><a href="data-sources.html#dog-bite-data"><i class="fa fa-check"></i><b>2.1</b> Dog Bite Data</a></li>
 <li class="chapter" data-level="2.2" data-path="data-sources.html"><a href="data-sources.html#nyc-dog-licensing-data"><i class="fa fa-check"></i><b>2.2</b> NYC Dog Licensing Data</a></li>
 <li class="chapter" data-level="2.3" data-path="data-sources.html"><a href="data-sources.html#average-temperature-in-nyc-data"><i class="fa fa-check"></i><b>2.3</b> Average Temperature in NYC Data</a></li>
+<li class="chapter" data-level="2.4" data-path="data-sources.html"><a href="data-sources.html#issues-with-the-data"><i class="fa fa-check"></i><b>2.4</b> Issues with the data</a></li>
 </ul></li>
 <li class="chapter" data-level="3" data-path="data-transformation.html"><a href="data-transformation.html"><i class="fa fa-check"></i><b>3</b> Data transformation</a>
 <ul>
 <li class="chapter" data-level="3.1" data-path="data-transformation.html"><a href="data-transformation.html#the-column-dateofbite"><i class="fa fa-check"></i><b>3.1</b> The column “DateOfBite”</a></li>
 <li class="chapter" data-level="3.2" data-path="data-transformation.html"><a href="data-transformation.html#the-column-breed"><i class="fa fa-check"></i><b>3.2</b> The column “Breed”</a></li>
-<li class="chapter" data-level="3.3" data-path="data-transformation.html"><a href="data-transformation.html#the-column-age"><i class="fa fa-check"></i><b>3.3</b> The column “Age”</a></li>
-<li class="chapter" data-level="3.4" data-path="data-transformation.html"><a href="data-transformation.html#temperature-data-from-average-temperature-in-nyc-data"><i class="fa fa-check"></i><b>3.4</b> Temperature data from Average Temperature in NYC Data</a></li>
+<li class="chapter" data-level="3.3" data-path="data-transformation.html"><a href="data-transformation.html#temperature-data-from-average-temperature-in-nyc-data"><i class="fa fa-check"></i><b>3.3</b> Temperature data from Average Temperature in NYC Data</a></li>
+<li class="chapter" data-level="3.4" data-path="data-transformation.html"><a href="data-transformation.html#bourough-data-in-nyc-dog-licensing-dataset"><i class="fa fa-check"></i><b>3.4</b> Bourough data in NYC Dog Licensing Dataset</a></li>
 </ul></li>
 <li class="chapter" data-level="4" data-path="missing-values.html"><a href="missing-values.html"><i class="fa fa-check"></i><b>4</b> Missing values</a>
 <ul>
@@ -106,6 +107,7 @@
 <li class="chapter" data-level="5.3" data-path="results.html"><a href="results.html#analysis-of-time"><i class="fa fa-check"></i><b>5.3</b> Analysis of Time</a></li>
 <li class="chapter" data-level="5.4" data-path="results.html"><a href="results.html#analysis-of-gender-spayneuter"><i class="fa fa-check"></i><b>5.4</b> Analysis of Gender / SpayNeuter</a></li>
 <li class="chapter" data-level="5.5" data-path="results.html"><a href="results.html#analysis-of-age"><i class="fa fa-check"></i><b>5.5</b> Analysis of Age</a></li>
+<li class="chapter" data-level="5.6" data-path="results.html"><a href="results.html#summary"><i class="fa fa-check"></i><b>5.6</b> Summary</a></li>
 </ul></li>
 <li class="chapter" data-level="6" data-path="interactive-component.html"><a href="interactive-component.html"><i class="fa fa-check"></i><b>6</b> Interactive component</a>
 <ul>
@@ -139,7 +141,7 @@
 <h2><span class="header-section-number">3.1</span> The column “DateOfBite”</h2>
 <p>In our main dog bites dataset, the data type of the column named “DateOfBite” is “Date &amp; Time”, e.g., “January 02, 2015”. In our analysis, we aim to discuss the passage of time in months, thus we extract the “year” and “month” from this column to add two new columns named “MonthOfBite” and “YearOfBite”. We show the original “DataOfBite” and the two new columns for some rows as follows.</p>
 <pre><code>## [1] &quot;C&quot;</code></pre>
-<pre><code>## # A tibble: 10,280 × 3
+<pre><code>## # A tibble: 10,280 x 3
 ##    DateOfBite      MonthOfBite YearOfBite
 ##    &lt;chr&gt;                 &lt;dbl&gt;      &lt;dbl&gt;
 ##  1 January 02 2015           1       2015
@@ -152,12 +154,12 @@
 ##  8 January 05 2015           1       2015
 ##  9 January 04 2015           1       2015
 ## 10 January 04 2015           1       2015
-## # … with 10,270 more rows</code></pre>
+## # ... with 10,270 more rows</code></pre>
 </div>
 <div id="the-column-breed" class="section level2" number="3.2">
 <h2><span class="header-section-number">3.2</span> The column “Breed”</h2>
 <p>Many rows contain an empty “Breed”, we transform them as “UNKNOWN”. We show the “Breed” column and it successfully shows “UNKNOWN” in some rows.</p>
-<pre><code>## # A tibble: 10,280 × 1
+<pre><code>## # A tibble: 10,280 x 1
 ##    Breed                             
 ##    &lt;chr&gt;                             
 ##  1 Poodle, Standard                  
@@ -170,30 +172,12 @@
 ##  8 Chihuahua                         
 ##  9 PIT BULL MIXED                    
 ## 10 UNKNOWN                           
-## # … with 10,270 more rows</code></pre>
+## # ... with 10,270 more rows</code></pre>
 </div>
-<div id="the-column-age" class="section level2" number="3.3">
-<h2><span class="header-section-number">3.3</span> The column “Age”</h2>
-<p>A few “Age” records are string not numeric, e.g., “7Y” that denotes 7 years and “7M” for 7 months. We drop any non-numeric characters in these records and convert ages in months to ages in years, e.g., convert “7M” to “7/12”. For empty ages, we use “-1” to denote them. We show the “Age” column as follows.</p>
-<pre><code>## # A tibble: 10,280 × 1
-##      Age
-##    &lt;dbl&gt;
-##  1     3
-##  2    -1
-##  3    -1
-##  4     6
-##  5     1
-##  6     1
-##  7     1
-##  8     1
-##  9    -1
-## 10    -1
-## # … with 10,270 more rows</code></pre>
-</div>
-<div id="temperature-data-from-average-temperature-in-nyc-data" class="section level2" number="3.4">
-<h2><span class="header-section-number">3.4</span> Temperature data from Average Temperature in NYC Data</h2>
-<p>We use our Average Temperature in NYC Data to obtain the corresponding temperature for each dog bite. We use “MonthOfBite” and “YearOfBite” to match our rows to the corresponding temperature, and add the corresponding temperature as a new column named “Avg_temp” to the main dog bites dataset. We show the “Avg_temp”, “MonthOfBite” and “YearOfBite” columns as follows.</p>
-<pre><code>## # A tibble: 10,280 × 3
+<div id="temperature-data-from-average-temperature-in-nyc-data" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> Temperature data from Average Temperature in NYC Data</h2>
+<p>We use our Average Temperature in NYC Data to obtain the monthly average temperature for the corresponding month of each dog bite. We use “MonthOfBite” and “YearOfBite” to match our rows to the corresponding temperature, and add the corresponding temperature as a new column named “Avg_temp” to the main dog bites dataset. We show the “Avg_temp”, “MonthOfBite” and “YearOfBite” columns as follows.</p>
+<pre><code>## # A tibble: 10,280 x 3
 ##    Avg_temp MonthOfBite YearOfBite
 ##       &lt;dbl&gt;       &lt;dbl&gt;      &lt;dbl&gt;
 ##  1     29.9           1       2015
@@ -206,7 +190,25 @@
 ##  8     29.9           1       2015
 ##  9     29.9           1       2015
 ## 10     29.9           1       2015
-## # … with 10,270 more rows</code></pre>
+## # ... with 10,270 more rows</code></pre>
+</div>
+<div id="bourough-data-in-nyc-dog-licensing-dataset" class="section level2" number="3.4">
+<h2><span class="header-section-number">3.4</span> Bourough data in NYC Dog Licensing Dataset</h2>
+<p>In our auxiliary dataset (NYC Dog Licensing Dataset), the values of “Borough” is missing for all of the rows, thus we use the column “ZipCode” to classify the records to the corresponding boroughs. We queried the range of ZipCodes in NYC corresponding to each borough, and marked each row with the corresponding “Borough” according to its “ZipCode”. We show the “ZipCode” and “Borough” columns as follows.</p>
+<pre><code>## # A tibble: 493,072 x 2
+##    ZipCode Borough  
+##      &lt;dbl&gt; &lt;chr&gt;    
+##  1   10035 Manhattan
+##  2   10465 Bronx    
+##  3   10013 Manhattan
+##  4   10013 Manhattan
+##  5   10028 Manhattan
+##  6   10013 Manhattan
+##  7   10025 Manhattan
+##  8   10013 Manhattan
+##  9   11215 Brooklyn 
+## 10   11201 Brooklyn 
+## # ... with 493,062 more rows</code></pre>
 
 </div>
 </div>

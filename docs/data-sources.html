@@ -79,13 +79,14 @@
 <li class="chapter" data-level="2.1" data-path="data-sources.html"><a href="data-sources.html#dog-bite-data"><i class="fa fa-check"></i><b>2.1</b> Dog Bite Data</a></li>
 <li class="chapter" data-level="2.2" data-path="data-sources.html"><a href="data-sources.html#nyc-dog-licensing-data"><i class="fa fa-check"></i><b>2.2</b> NYC Dog Licensing Data</a></li>
 <li class="chapter" data-level="2.3" data-path="data-sources.html"><a href="data-sources.html#average-temperature-in-nyc-data"><i class="fa fa-check"></i><b>2.3</b> Average Temperature in NYC Data</a></li>
+<li class="chapter" data-level="2.4" data-path="data-sources.html"><a href="data-sources.html#issues-with-the-data"><i class="fa fa-check"></i><b>2.4</b> Issues with the data</a></li>
 </ul></li>
 <li class="chapter" data-level="3" data-path="data-transformation.html"><a href="data-transformation.html"><i class="fa fa-check"></i><b>3</b> Data transformation</a>
 <ul>
 <li class="chapter" data-level="3.1" data-path="data-transformation.html"><a href="data-transformation.html#the-column-dateofbite"><i class="fa fa-check"></i><b>3.1</b> The column “DateOfBite”</a></li>
 <li class="chapter" data-level="3.2" data-path="data-transformation.html"><a href="data-transformation.html#the-column-breed"><i class="fa fa-check"></i><b>3.2</b> The column “Breed”</a></li>
-<li class="chapter" data-level="3.3" data-path="data-transformation.html"><a href="data-transformation.html#the-column-age"><i class="fa fa-check"></i><b>3.3</b> The column “Age”</a></li>
-<li class="chapter" data-level="3.4" data-path="data-transformation.html"><a href="data-transformation.html#temperature-data-from-average-temperature-in-nyc-data"><i class="fa fa-check"></i><b>3.4</b> Temperature data from Average Temperature in NYC Data</a></li>
+<li class="chapter" data-level="3.3" data-path="data-transformation.html"><a href="data-transformation.html#temperature-data-from-average-temperature-in-nyc-data"><i class="fa fa-check"></i><b>3.3</b> Temperature data from Average Temperature in NYC Data</a></li>
+<li class="chapter" data-level="3.4" data-path="data-transformation.html"><a href="data-transformation.html#bourough-data-in-nyc-dog-licensing-dataset"><i class="fa fa-check"></i><b>3.4</b> Bourough data in NYC Dog Licensing Dataset</a></li>
 </ul></li>
 <li class="chapter" data-level="4" data-path="missing-values.html"><a href="missing-values.html"><i class="fa fa-check"></i><b>4</b> Missing values</a>
 <ul>
@@ -106,6 +107,7 @@
 <li class="chapter" data-level="5.3" data-path="results.html"><a href="results.html#analysis-of-time"><i class="fa fa-check"></i><b>5.3</b> Analysis of Time</a></li>
 <li class="chapter" data-level="5.4" data-path="results.html"><a href="results.html#analysis-of-gender-spayneuter"><i class="fa fa-check"></i><b>5.4</b> Analysis of Gender / SpayNeuter</a></li>
 <li class="chapter" data-level="5.5" data-path="results.html"><a href="results.html#analysis-of-age"><i class="fa fa-check"></i><b>5.5</b> Analysis of Age</a></li>
+<li class="chapter" data-level="5.6" data-path="results.html"><a href="results.html#summary"><i class="fa fa-check"></i><b>5.6</b> Summary</a></li>
 </ul></li>
 <li class="chapter" data-level="6" data-path="interactive-component.html"><a href="interactive-component.html"><i class="fa fa-check"></i><b>6</b> Interactive component</a>
 <ul>
@@ -136,7 +138,7 @@
 <h1><span class="header-section-number">Chapter 2</span> Data sources</h1>
 <p>Our main data source is about dog bite incidents that happened in NYC from 2015 to 2017 reported to the Department of Health and Mental Hygiene (DOHMH). There are about 10.3k records in total. Each record represents a single dog bite incident and information on breed, age, gender. Spayed and neutered status are also provided. With those features given, we can explore the relationships between bite incidents and dogs’ related features.</p>
 <p>We also choose two auxiliary data sources. The first one provides information about licensing in different areas in NYC. We want to use this data to explore more about licensing with areas in order to make a better assumption about relationship dog bitten incidents with environments. The second one reported the monthly mean average temperature for NYC, which we speculate has a certain effect on dog bites.</p>
-<p>We will introduce these three data sources separately.</p>
+<p>We collected these data sources together with discussion. We will introduce these three data sources separately.</p>
 <div id="dog-bite-data" class="section level2" number="2.1">
 <h2><span class="header-section-number">2.1</span> Dog Bite Data</h2>
 <p>Dataset: DOHMH_Dog_Bite_Data.csv</p>
@@ -280,6 +282,11 @@
 <h2><span class="header-section-number">2.3</span> Average Temperature in NYC Data</h2>
 <p>Dataset: tempbymonth.csv</p>
 <p>We download this dataset from <a href="https://www.weather.gov/wrh/climate?wfo=okx" class="uri">https://www.weather.gov/wrh/climate?wfo=okx</a>, which provides the monthly average temperature for NYC. This dataset records the average temperature for NYC from January 2015 to December 2017. During the process of analyzing our main dataset, we observed that the number of dog bites will change periodically over time (month). We speculate that this may be related to the temperature, thus we choose this data source to assist our analysis.</p>
+</div>
+<div id="issues-with-the-data" class="section level2" number="2.4">
+<h2><span class="header-section-number">2.4</span> Issues with the data</h2>
+<p>First, our main dataset only contains the records of dog bites while does not contain data for the population of total dogs. With this dataset, we could not determine what causes the different proportions of dog bites for different breeds, boroughs, and other characteristics. For example, we can see the breed with the highest proportion of biting people. Why does this breed have the highest proportion of biting people? Because a large proportion of dog owners have this breed of dogs and it becomes the most common breed in NYC, or because of its natural potential of being aggressive? To solve this problem, we introduce our auxiliary dataset (NYC Dog Licensing Dataset), which is much larger than the dog bites dataset, to roughly estimate the population composition of dogs with different characteristics.</p>
+<p>Second, in our datasets, some columns have missing values. The specific analysis is contained in the fourth part. For example, the column “Breed” in Dog Bite Data contains many missing values and the values of “Borough” is missing for all of the rows in NYC Dog Licensing Dataset. We will solve this question in 3 Data Transformation.</p>
 
 </div>
 </div>
