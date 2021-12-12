@@ -23,8 +23,8 @@ Our main data is about dog bite incidents that happened in NYC from 2015 to 2017
 ## Questions:
 Here are some interesting questions that we want to answer when having this data set: (And we also provide some explanations about why we want to pay attention to them)
 
-Which breed has the largest number of dog bites? Is this because of its higher population among all dogs or because of this breed’s natural potential of being aggressive? 
+1. Which breed has the largest number of dog bites? Is this because of its higher population among all dogs or because of this breed’s natural potential of being aggressive? 
 
-Which borough has the largest number of dog bites? Is this because of the higher population of dogs in this borough or because of the inadequate management and policies? Are dog bites affected by time? Is there periodicity? Is this related to temperature? 
+2. Which borough has the largest number of dog bites? Is this because of the higher population of dogs in this borough or because of the inadequate management and policies? Are dog bites affected by time? Is there periodicity? Is this related to temperature? 
 
-Are dog bites affected by gender and spayed/neutered status? Which gender has the larger number of dog bites? Is this because of the higher population of dogs with this gender or because of their aggression? Which is more likely to bite people, younger dogs or older dog? Is this related to breeds?
+3. Are dog bites affected by gender and spayed/neutered status? Which gender has the larger number of dog bites? Is this because of the higher population of dogs with this gender or because of their aggression? Which is more likely to bite people, younger dogs or older dog? Is this related to breeds?
