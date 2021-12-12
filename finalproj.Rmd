@@ -14,6 +14,21 @@ knitr::opts_chunk$set(
 
 # Introduction
 
+As dogs have become one of our most important pets and friends, we have also paid more attention to dog bite events. We are curious about the factors that are most likely to cause dog bite events, which could assist the management department and dog owners have more targeted control and care for dogs. It can also help reduce the unwanted incidents and also make puppies as lovely creatures in people’s minds. With this inspiration, our project aims to explore the relationships between dog bites and some characteristics of dogs, e.g., breeds, boroughs, genders.
+
+We collect three data sources for our project. Our main dataset is about dog bite incidents that happened in NYC from 2015 to 2017 reported to the Department of Health and Mental Hygiene (DOHMH). We also choose two auxiliary data sources, i.e., NYC Dog Licensing Data and Average Temperature in NYC Data. With the three datasets, we aim to discussing the following questions:
+
+Which breed has the largest number of dog bites? Is this because of its higher population among all dogs or because of this breed’s natural potential of being aggressive?
+
+Which borough has the largest number of dog bites? Is this because of the higher population of dogs in this borough or because of the inadequate management and policies?
+
+Are dog bites affected by time? Is there periodicity? Is this related to temperature?
+
+Are dog bites affected by gender and spayed/neutered status? Which gender has the larger number of dog bites? Is this because of the higher population of dogs with this gender or because of their aggression?
+
+Which is more likely to bite people, younger dogs or older dog? Is this related to breeds?
+
+We will explore the answers in our project. For more details, refer to https://github.com/rul124/DogBiteAnalysis.
 
 <!--chapter:end:index.Rmd-->
 
