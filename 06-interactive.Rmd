@@ -1,7 +1,7 @@
 # Interactive component
 
 ## Introduction
-For this part, we plot the doughnut chart indicating the Top 9 proportion of dog bites accidents caused divided by breeds. To interact with the plot, you can click the areas in New York City (by default, it will show the whole New York City dog bite data) and the doughnut chart will show you the result
+For this part, we plot the doughnut chart indicating the Top 9 proportion of dog bites accidents caused divided by breeds. To interact with the plot, you can click the areas in New York City (by default, it will show the whole New York City dog bite data) and the doughnut chart will show you the result. From this part, we could find that for “Pit Bull” and “UNKNOWN” breeds have the highest proportion of biting people in all boroughs. The percentages of these two breeds are much higher than other breeds. The breeds that come third in different boroughs are different, which may be related to the preference of each borough for different breeds of dogs.
 
 ## Interactive Part
 ```{r cars}
