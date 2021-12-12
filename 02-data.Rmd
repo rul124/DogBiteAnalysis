@@ -3,7 +3,7 @@ Our main data source is about dog bite incidents that happened in NYC from 2015 
 
 We also choose two auxiliary data sources. The first one provides information about licensing in different areas in NYC. We want to use this data to explore more about licensing with areas in order to make a better assumption about relationship dog bitten incidents with environments. The second one reported the monthly mean average temperature for NYC, which we speculate has a certain effect on dog bites.
 
-We will introduce these three data sources separately.
+We collected these data sources together with discussion. We will introduce these three data sources separately.
 
 ## Dog Bite Data
 Dataset: DOHMH_Dog_Bite_Data.csv
@@ -35,3 +35,9 @@ knitr::kable(Datadescription2[1:11,], caption = "Columns in NYC Dog Licensing Da
 Dataset: tempbymonth.csv
 
 We download this dataset from https://www.weather.gov/wrh/climate?wfo=okx, which provides the monthly average temperature for NYC. This dataset records the average temperature for NYC from January 2015 to December 2017. During the process of analyzing our main dataset, we observed that the number of dog bites will change periodically over time (month). We speculate that this may be related to the temperature, thus we choose this data source to assist our analysis.
+
+## Issues with the data
+
+First, our main dataset only contains the records of dog bites while does not contain data for the population of total dogs. With this dataset, we could not determine what causes the different proportions of dog bites for different breeds, boroughs, and other characteristics. For example, we can see the breed with the highest proportion of biting people. Why does this breed have the highest proportion of biting people? Because a large proportion of dog owners have this breed of dogs and it becomes the most common breed in NYC, or because of its natural potential of being aggressive? To solve this problem, we introduce our auxiliary dataset (NYC Dog Licensing Dataset), which is much larger than the dog bites dataset, to roughly estimate the population composition of dogs with different characteristics.
+
+Second, in our datasets, some columns have missing values. The specific analysis is contained in the fourth part. For example, the column “Breed” in Dog Bite Data contains many missing values and the values of “Borough” is missing for all of the rows in NYC Dog Licensing Dataset. We will solve this question in 3 Data Transformation.
