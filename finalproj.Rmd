@@ -1,0 +1,1167 @@
+--- 
+title: Dog Bite Accident Analysis
+author: Xiaorui Qin, Ziyu Fang, Ruoxi Liu
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+---
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+# Introduction
+
+
+<!--chapter:end:index.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+As dogs have become one of our most important pets and friends, we have also paid more attention to dog bite events. We are curious about the factors that are most likely to cause dog bite events, which could assist the management department and dog owners have more targeted control and care for dogs. It can also help reduce the unwanted incidents and also make puppies as lovely creatures in people’s minds. With this inspiration, our project aims to explore the relationships between dog bites and some characteristics of dogs, e.g., breeds, boroughs, genders.
+
+We collect three data sources for our project. Our main dataset is about dog bite incidents that happened in NYC from 2015 to 2017 reported to the Department of Health and Mental Hygiene (DOHMH). We also choose two auxiliary data sources, i.e., NYC Dog Licensing Data and Average Temperature in NYC Data. With the three datasets, we aim to discussing the following questions:
+
+Which breed has the largest number of dog bites? Is this because of its higher population among all dogs or because of this breed’s natural potential of being aggressive?
+
+Which borough has the largest number of dog bites? Is this because of the higher population of dogs in this borough or because of the inadequate management and policies?
+
+Are dog bites affected by time? Is there periodicity? Is this related to temperature?
+
+Are dog bites affected by gender and spayed/neutered status? Which gender has the larger number of dog bites? Is this because of the higher population of dogs with this gender or because of their aggression?
+
+Which is more likely to bite people, younger dogs or older dog? Is this related to breeds?
+
+We will explore the answers in our project. For more details, refer to https://github.com/rul124/DogBiteAnalysis.
+
+# Data sources
+Our main data source is about dog bite incidents that happened in NYC from 2015 to 2017 reported to the Department of Health and Mental Hygiene (DOHMH). There are about 10.3k records in total. Each record represents a single dog bite incident and information on breed, age, gender. Spayed and neutered status are also provided. With those features given, we can explore the relationships between bite incidents and dogs’ related features.
+
+We also choose two auxiliary data sources. The first one provides information about licensing in different areas in NYC. We want to use this data to explore more about licensing with areas in order to make a better assumption about relationship dog bitten incidents with environments. The second one reported the monthly mean average temperature for NYC, which we speculate has a certain effect on dog bites.
+
+We will introduce these three data sources separately.
+
+## Dog Bite Data
+Dataset: DOHMH_Dog_Bite_Data.csv
+
+We download this dataset from https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg, which is collected by the Department of Health and Mental Hygiene from reports received online, mail, fax or by phone to 311 or NYC DOHMH Animal Bite Unit. We show the description of the 9 columns as follows.
+
+```{r}
+library(tidyverse)
+Datadescription1 <- read_csv("Datadescription1.csv")
+
+knitr::kable(Datadescription1[1:9,], caption = "Columns in Dog Bite Data",
+             row.names = F,font_size = 10)
+```
+
+## NYC Dog Licensing Data
+Dataset: NYC_Dog_Licensing_Dataset.csv
+
+We download this dataset from https://data.cityofnewyork.us/Health/NYC-Dog-Licensing-Dataset/nu7n-tubp, which is sourced from the DOHMH Dog Licensing System. There are about 493k records in total. Each record represents a unique dog license that was active during the year, but not necessarily a unique record per dog, since a license that is renewed during the year results in a separate record of an active license period. We just use this data source to roughly reflect the distribution of dogs in NYC for some features (e.g., age, sex, and bread) to help our analysis. For example, in our main dog bites dataset, we can see the breed with the highest proportion of biting people. In order to see if the reason behind it is about its higher population among all dogs or simply about this breed’s natural potential of being aggressive, we could use this auxiliary dataset, which is much larger than the main dog bites dataset, to roughly estimate the population composition of different breeds and analyze the above question. With this exploration, we can have a clearer picture of the relationship between breeds and its potential aggressiveness. We do not want to make a rash decision of naming some breeds “aggressive ones” without comparing the proportion. In order to give a more scientific answer, this step is unignorable. We show the description of the 11 columns as follows.
+
+```{r}
+library(tidyverse)
+Datadescription2 <- read_csv("Datadescription2.csv")
+
+knitr::kable(Datadescription2[1:11,], caption = "Columns in NYC Dog Licensing Dataset",
+             row.names = F,font_size = 10)
+```
+
+## Average Temperature in NYC Data
+Dataset: tempbymonth.csv
+
+We download this dataset from https://www.weather.gov/wrh/climate?wfo=okx, which provides the monthly average temperature for NYC. This dataset records the average temperature for NYC from January 2015 to December 2017. During the process of analyzing our main dataset, we observed that the number of dog bites will change periodically over time (month). We speculate that this may be related to the temperature, thus we choose this data source to assist our analysis.
+
+<!--chapter:end:02-data.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Data transformation
+Since we will only extract some information from the two auxiliary data sources to help analyze our main dataset, we mainly discuss the data transformation of the main dog bites dataset.
+
+## The column “DateOfBite”
+
+In our main dog bites dataset, the data type of the column named “DateOfBite” is “Date & Time”, e.g., “January 02, 2015”. In our analysis, we aim to discuss the passage of time in months, thus we extract the “year” and “month” from this column to add two new columns named “MonthOfBite” and “YearOfBite”. We show the original “DataOfBite” and the two new columns for some rows as follows.
+
+```{r, message=FALSE}
+library(pacman)
+p_load(tidyverse)
+p_load(lubridate)
+p_load(ggExtra)
+
+
+lct <- Sys.getlocale("LC_TIME")
+Sys.setlocale("LC_TIME", "C")
+
+DogBiteDF <- read_csv("DOHMH_Dog_Bite_Data.csv", na = c("", "NA","?"))
+Temperature <- read_csv("tempbymonth.csv", na = c("", "NA"))
+DogRegDF <- read_csv("NYC_Dog_Licensing_Dataset.csv")
+DogBiteDF <- DogBiteDF %>% 
+  mutate(MonthOfBite = month(strptime(pull(DogBiteDF, DateOfBite), 
+                                      format="%B %d %Y"))) %>% 
+  mutate(YearOfBite = year(strptime(pull(DogBiteDF, DateOfBite), 
+                                      format="%B %d %Y")))
+DogBiteDF[, c("DateOfBite", "MonthOfBite", "YearOfBite")]
+```
+
+## The column “Breed”
+
+Many rows contain an empty “Breed”, we transform them as “UNKNOWN”. We show the “Breed” column and it successfully shows “UNKNOWN” in some rows.
+
+```{r}
+DogBiteDF <- DogBiteDF %>% 
+  mutate(Breed = replace_na(Breed, 'UNKNOWN'))
+DogBiteDF[, c("Breed")]
+```
+
+## The column “Age”
+
+A few “Age” records are string not numeric, e.g., “7Y” that denotes 7 years and “7M” for 7 months. We drop any non-numeric characters in these records and convert ages in months to ages in years, e.g., convert “7M” to “7/12”. For empty ages, we use “-1” to denote them. We show the “Age” column as follows.
+
+```{r}
+DogBiteDF <- DogBiteDF %>% 
+  mutate(Age = if_else(grepl('Y|y', Age, fixed = TRUE),parse_number(Age),
+                       if_else(grepl('M|m', Age, fixed = TRUE), 
+                               parse_number(Age)/12, 
+                               parse_number(replace_na(Age,'-1')))))
+DogBiteDF[, c("Age")]
+```
+
+## Temperature data from Average Temperature in NYC Data
+
+We use our Average Temperature in NYC Data to obtain the corresponding temperature for each dog bite. We use “MonthOfBite” and “YearOfBite” to match our rows to the corresponding temperature, and add the corresponding temperature as a new column named “Avg_temp” to the main dog bites dataset. We show the “Avg_temp”, “MonthOfBite” and “YearOfBite” columns as follows.
+
+```{r}
+Temperature <- Temperature %>% 
+  pivot_longer(!Year, names_to = "Month", 
+               names_transform = list(Month = as.integer),
+               values_to = "Avg_temp",
+               values_drop_na = TRUE)
+
+DogBiteDF <- DogBiteDF %>% left_join(., Temperature, 
+                                     by=c('MonthOfBite'='Month', 'YearOfBite'='Year'), suffix = c("_x", "_y"))
+DogBiteDF[, c("Avg_temp","MonthOfBite","YearOfBite")]
+```
+
+<!--chapter:end:03-cleaning.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Missing values
+
+```{r setup, include=FALSE}
+# this prevents package loading message from appearing in the rendered version of your problem set
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+## Read the data
+
+We analyze the missing values of our data "Dog Bite Data" from https://data.cityofnewyork.us/Health/DOHMH-Dog-Bite-Data/rsgh-akpg, which contains 10280 rows and 9 columns. We read the data and show the names of the 9 columns for analysis.
+
+```{r}
+library(ggplot2)
+library(dplyr)
+DogBite <- read.csv("DOHMH_Dog_Bite_Data.csv", header = TRUE, na.strings = c(""))
+colnames(DogBite)
+```
+
+## Missing values by column
+
+```{r}
+colSums(is.na(DogBite)) %>%
+  sort(decreasing = TRUE)
+```
+
+First, we show missing values by column. We could conclude that there are most missing values in "Age" while "ZipCode" and "Breed" come second and third. We can roughly analyze the possible reasons. Most of dog owners adopt or purchase their dogs, thus some of them may not be sure of the date of birth. Of course, dogs of some owners are born to the big dog at home, or they know the dogs’ birthday when they purchase them, but some owners are hard to know. This is a very common situation. In addition, many dog owners' dogs may be hybrid breeds, or stray dogs adopted by owners. In these situations, owners may not be sure of the "breed" of their dogs. As for the "ZipCode", dog bites may not always happen near the dog owners’ houses, so owners may not be familiar with the "ZipCode" there. Of course, many careful dog owners will inquire and fill in "ZipCode", but others may not fill in it.
+
+All of other columns do not have any missing value. In class, Prof. Robbins mentioned that we could consider the connection between some columns, such as the address and the zipcode. In our data, we noticed that there is no connection of missing values between "ZipCode" and "Borough" according to the current analysis. We could not see any other connections right now.
+
+## Missing values by row
+
+Since we have 10280 rows, it is not clear if we continue analyzing with all of the data. Our data only contains one file, thus we randomly select 40 rows for analysis.
+
+```{r}
+sampleDogBite <- sample_n(DogBite, 40)
+```
+
+```{r}
+rowSums(is.na(sampleDogBite)) %>%
+  sort(decreasing = TRUE)
+```
+
+Then we show missing values by row from large to small. We found that rows with the most missing values miss 3 values (i.e, "Age", "ZipCode", and "Breed"), while rows with the least missing values miss 0 value. There are only a small part of events in which all three values are missing.
+
+## Row / column missing patterns - heatmap
+
+```{r, fig.height = 12, fig.width = 12}
+library(tidyverse)
+tidyDogBite <- sampleDogBite %>% 
+    rownames_to_column("id") %>% 
+    gather(key, value, -id) %>% 
+    mutate(missing = ifelse(is.na(value), "yes", "no"))
+ggplot(tidyDogBite, aes(x = key, y = fct_rev(id), fill = missing)) +
+  geom_tile(color = "white") + 
+  ggtitle("DogBite with NAs added") +
+  scale_fill_viridis_d() + # discrete scale
+  theme_bw()
+```
+
+Now we could show the heatmap to analyze the row / column missing patterns and distributions of missing values. In our heatmap, we discover that the vast majority of rows that miss “breed” and “ZipCode” also miss “Age”. There are only 2 exceptions in our 40 sample rows. One possible reason is that the most easily unknown characteristic of dogs is “age”. If dog owners do not know the age of dogs when adopting or purchasing it, it will be difficult to know in the future. However, the “breed” information can be identified through later medical tests, and “ZipCode” can also be queried after the dog bite events. If not even the easily known information of “breed” and “ZipCode” is available, it indicates that the data has limited information about these dogs and dog bite events, so it is easy to miss “age”.
+
+## Row / column missing patterns - gg_miss_fct
+
+Since most columns of our dataset contain categorical data, it is not proper to analyze row / column missing patterns with mi::missing_data.frame() for heatmaps or with “geom_tile()” for missing values by variable as we discussed in class. In order to better analyze categorical data, we think “gg_miss_fct()” is a better choice. We choose three columns, i.e., “Gender”, “SpayNeuter”, and “Borough”, to analyze the patterns. The plots show the proportions of missing values in different categories of the certain column. Note that we use the entire dataset instead of our 40 samples in this part for better discussion.
+
+```{r}
+library(naniar)
+gg_miss_fct(x = DogBite, fct = Gender)
+```
+
+In the plot, “F” denotes “Female”, “M” denotes “Male”, and “U” denotes “Unknown”. The plot shows that most events whose “Gender” is “Unknown” miss “Age”, and about half of these events miss “Breed” and “ZipCode”. However, few events whose “Gender” is “Male” or “Female” miss “Age”, “Breed”, and “ZipCode”, and there is no great difference between the patterns of “Male” and “Female”. We could analyze this situation. As we discussed above, the most easily unknown characteristic of dogs is “Age”. If dog owners do not know the age of dogs when adopting or purchasing it, it will be difficult to know in the future. Although “breed” and “ZipCode” are also easily be missed, they are a little easier to be obtained than “Age”. The “breed” information can be identified through later medical tests, and “ZipCode” can also be queried after the dog bite events. However, the “Gender” information can be identified through observations or medical tests easily. If in an event, we do not even know the gender of the dog, it indicates that the data has limited information about these dogs and dog bite events, it is easy to miss “Age”, “Breed”, and “ZipCode”, especially “Age”. In addition, there is not much difference between patterns of missing values in female and male dogs, since the gender will not influence the patterns.
+
+```{r}
+gg_miss_fct(x = DogBite, fct = SpayNeuter)
+```
+
+In the plot, “false” and “true” denote the situation of SpayNeuter of dogs. The plot shows that most events whose “SpayNeuter” is “false” miss “Age”, and about half of these events miss “Breed” and “ZipCode”. However, few events whose “SpayNeuter” is “true” miss “Age”, “Breed”, and “ZipCode”. We could analyze this situation. As we discussed above, the most easily unknown characteristic of dogs is “Age”. If dog owners do not know the age of dogs when adopting or purchasing it, it will be difficult to know in the future. Although “breed” and “ZipCode” are also easily be missed, they are a little easier to be obtained than “Age”. The “breed” information can be identified through later medical tests, and “ZipCode” can also be queried after the dog bite events. If in an event, “SpayNeuter” is true, which means the dog is well taken care of and controlled, these careful dog owners are more likely to know the “Age”, “Breed”, and “ZipCode”. By contrast, when it is false, it is more likely to miss “Age”, “Breed”, and “ZipCode”, especially “Age”.
+
+```{r}
+gg_miss_fct(x = DogBite, fct = Borough)
+```
+
+The plot denotes the patterns of missing values in different boroughs. The plot shows that whatever the borough is, it is more likely to miss “Age” than “Breed” and “ZipCode”, which is consistent with what we discussed above. There is one exception. When the “Borough” is “Other”, i.e., we do not know the specific borough, 50% of events miss “ZipCode”. This is reasonable and Prof. Robbins also gave a similar example in class. Since both of “Borough” and “ZipCode” contain the information of the address, there is the connection between them. When we do not know the specific borough, it is likely to miss “ZipCode”.
+
+## Missing patterns
+
+```{r}
+x <- mi::missing_data.frame(sampleDogBite)
+```
+
+```{r}
+class(x)
+```
+
+```{r}
+x@patterns
+```
+
+This part lists the situation of missing values of our 40 samples. Each one indicates the kinds of values that are missed in each sample.
+
+```{r}
+levels(x@patterns)
+```
+
+This part lists all of the patterns above.
+
+```{r}
+summary(x@patterns)
+```
+
+This part shows the specific counts of patterns above.
+
+Then, we aim to create a missing values plot in the style of extracat::visna() (no longer available on CRAN) using ggplot2. First, we create the function for creating missing plots.
+
+```{r}
+plot_missing <- function(dataset, percent = TRUE) {
+  library(cowplot)
+  
+  ###### for right plot ######
+  missing_patterns <- data.frame(is.na(dataset)) %>%
+    group_by_all() %>%
+    count(name = "count", sort = TRUE) %>%
+    ungroup()
+  
+  missing_patterns <- missing_patterns %>%
+    mutate(pattern = 1:nrow(missing_patterns)) %>%
+    mutate(pattern = fct_reorder(as.factor(pattern), count))%>%
+    mutate(alpha = ifelse(
+        rowSums(missing_patterns[, -ncol(missing_patterns)]) == 0, 
+        "dark", "light"))
+  
+  missing_patterns$pattern <- factor(missing_patterns$pattern,
+                                     levels = nrow(missing_patterns):1)
+  
+  ###### for up plot ######
+  dataset1 <- dataset %>%
+    rownames_to_column("id") %>%
+    gather("feature", "value", -id) %>%
+    mutate(missing = ifelse(is.na(value), 1, 0))
+  
+  missing_row <- dataset1 %>%
+    group_by(feature) %>%
+    summarise(n = sum(missing)) %>%
+    mutate(feature = fct_reorder(feature, n))
+  
+  missing_row$feature <- factor(missing_row$feature, rev(levels(missing_row$feature)))
+  
+  ###### for middle plot ######
+  dataset2 <- missing_patterns %>%
+    select(-count, -pattern) %>%
+    rownames_to_column("id") %>%
+    gather("feature", "value", -c(id, alpha))
+  
+  dataset2$id <- factor(dataset2$id, levels = nrow(missing_patterns):1)
+  dataset2$feature <- factor(dataset2$feature, levels = levels(missing_row$feature))
+  
+  middle <- dataset2 %>%
+    ggplot(aes(x = feature, y = id, fill = value, alpha = alpha)) +
+    geom_tile(color = "white") +
+    scale_fill_manual(values = c("grey", "purple"), guide = "none") +
+    labs(x = "variable", y = "missing patterns") + 
+    scale_alpha_manual(values = c(2, .5), guide = "none") +
+    annotate("text",
+             x = rep(6, sum(missing_patterns$alpha == "dark")),
+             y = length(missing_patterns$alpha) - which(missing_patterns$alpha == "dark") + 1,
+             label = rep("complete cases", sum(missing_patterns$alpha == "dark"))
+            ) +
+    theme(axis.text.x = element_text(vjust = .5, hjust = .5, angle = 45))
+  
+  if(percent == FALSE) {
+    right <- missing_patterns %>%
+      ggplot(aes(y=count, x=pattern, alpha = alpha)) + 
+      geom_bar(stat = "identity", fill = "lightblue") +
+      theme_bw() +
+      labs(x = "", y = "row count") +
+      coord_flip() +
+      scale_alpha_manual(values = c(2, .5), guide = "none")
+    
+    up <- missing_row %>%
+      ggplot(aes(x = feature, y = n)) + 
+      geom_bar(stat = "identity", fill = "lightblue") +
+      theme_bw() + 
+      labs(x = "", y = "num rows missing", title = "Missing value patterns") +
+      theme(axis.text.x = element_text(vjust = 0.5, hjust = 0.5, angle = 45))
+    
+    res = plot_grid(up, NULL, middle, right, 
+                    rel_heights = c(1, 2),
+                    rel_widths = c(2, 1),
+                    align = "hv")
+  } else if (percent == TRUE) {
+    right <- missing_patterns %>%
+      ggplot(aes(y = count/sum(count) * 100, x = pattern, alpha = alpha)) +
+      geom_bar(stat = "identity", fill = "lightblue") +
+      theme_bw() +
+      labs(x = "", y = "% rows", title = "") +
+      coord_flip() +
+      scale_alpha_manual(values = c(2, .5), guide = "none")
+    
+    up <- missing_row %>%
+      ggplot(aes(x = feature, y = n/nrow(dataset)*100)) + 
+      geom_bar(stat = "identity", fill = "lightblue") +
+      theme_bw() + 
+      labs(x = "", y = "num rows missing", title = "Missing value patterns") +
+      theme(axis.text.x = element_text(vjust = 0.5, hjust = 0.5, angle = 45))
+    
+    res = plot_grid(up, NULL, middle, right, 
+                    rel_heights = c(1, 2),
+                    rel_widths = c(3, 1),
+                    align = "hv")
+  }
+  return(res)
+}
+```
+
+Then we use the function to draw the plot. Note that we use the entire dataset instead of our 40 samples in this part for better discussion.
+
+```{r}
+DogBiteForPlot <- subset(DogBite, select = -c(UniqueID))
+plot_missing(DogBiteForPlot, percent = FALSE)
+```
+
+First, we could analyze the left upper corner of this plot, which sorts the counts of rows that miss certain values. We found that there are most missing values in “Age” while “ZipCode” and “Breed” come second and third. All of other columns do not have any missing value. We can analyze the possible reasons. Most of dog owners adopt or purchase their dogs, thus some of them may not be sure of the date of birth. Of course, dogs of some owners are born to the big dog at home, or they know the dogs’ birthday when they purchase them, but some owners are hard to know. This is a very common situation. In addition, many dog owners’ dogs may be hybrid breeds, or stray dogs adopted by owners. In these situations, owners may not be sure of the “breed” of their dogs. As for the “ZipCode”, dog bites may not always happen near the dog owners’ houses, so owners may not be familiar with the “ZipCode” there. Of course, many careful dog owners will inquire and fill in “ZipCode”, but others may not fill in it.
+
+Second, we could analyze the left lower corner, which shows all of the patterns, i.e., miss nothing, only miss “Age”, miss “Age” and “ZipCode”, miss “Age” and “ZipCode” and “Breed”, only miss “ZipCode”, miss “Age” and “Breed”, only miss “Breed”, miss “ZipCode” and “Breed”. 
+
+Third, we analyze the right lower corner, which sort the counts of 8 kinds of patterns we mentioned above. We could conclude that most events miss nothing. Events that only miss “Age” come second. Events that miss “Age” and “ZipCode” come third. Events that miss “ZipCode” and “Breed” is the least. We will analyze them separately. 
+
+Most events miss nothing, which shows that the quality of our dataset is good. 
+
+Many events only miss “Age”. As we discussed above, the most easily unknown characteristic of dogs is “Age”. If dog owners do not know the age of dogs when adopting or purchasing it, it will be difficult to know in the future. Although “breed” and “ZipCode” are also easily be missed, they are a little easier to be obtained than “Age”. The “breed” information can be identified through later medical tests, and “ZipCode” can also be queried after the dog bite events. 
+
+Events that miss “Age” and “ZipCode” come third. As we mentioned above, “ZipCode” is easier to be obtained than “Age”. If in an event, we even do not know “ZipCode”, it indicates that the data has limited information about these dogs and dog bite events, it is easy to miss “Age”. In addition, this also indicate that “Breed” is easier to be obtained than “Age” and “ZipCode”, which is consistent with the left upper corner of this plot. 
+
+Events that miss “ZipCode” and “Breed” is the least. As we mentioned above, the most easily unknown characteristic of dogs is “Age”. It is easier to obtain “Breed” and “ZipCode”. If we do not even know “Breed” and “ZipCode”, it is less likely to know “Age”.
+
+```{r}
+DogBiteForPlot <- subset(DogBite, select = -c(UniqueID))
+plot_missing(DogBiteForPlot, percent = TRUE)
+```
+
+In this part, we draw a plot using our function, i.e., plot_missing(DogBiteForPlot, percent = TRUE). The situation is similar to the above plot from plot_missing(DogBiteForPlot, percent = FALSE).
+
+## Missing by borough
+
+```{r}
+percent_missing <- DogBite %>% group_by(Borough) %>% 
+  summarize(num_bites = n(), num_na = sum(is.na(`Age`))) %>% 
+  mutate(percent_na = round(num_na/num_bites, 2)) %>% 
+  arrange(-percent_na)
+percent_missing
+```
+
+First, we show the percent of missing values of “Age” in different boroughs. Note that we use the entire dataset instead of our 40 samples in this part for better discussion. Events in “Bronx” is most likely to miss “Age”. There is not a large difference between the percent of different boroughs.
+
+```{r}
+percent_missing <- DogBite %>% group_by(Borough) %>% 
+  summarize(num_bites = n(), num_na = sum(is.na(`Breed`))) %>% 
+  mutate(percent_na = round(num_na/num_bites, 2)) %>% 
+  arrange(-percent_na)
+percent_missing
+```
+
+Now we show the percent of missing values of “Breed” in different boroughs. Events in “Other” is most likely to miss “Breed”. One possible reason is that according to our discussion above, there is a connection between “ZipCode” and “Borough”, which indicates that if we do not know the specific borough, it is more likely to miss “ZipCode”. If we do not even know “ZipCode”, it indicates that the data has limited information about these dogs and dog bite events, so it is easy to miss “Breed”.
+
+```{r}
+percent_missing <- DogBite %>% group_by(Borough) %>% 
+  summarize(num_bites = n(), num_na = sum(is.na(`ZipCode`))) %>% 
+  mutate(percent_na = round(num_na/num_bites, 2)) %>% 
+  arrange(-percent_na)
+percent_missing
+```
+
+Then we show the percent of missing values of “ZipCode” in different boroughs. Events in “Other” is most likely to miss “ZipCode”. One possible reason is that according to our discussion above, there is a connection between “ZipCode” and “Borough”, which indicates that if we do not know the specific borough, it is more likely to miss “ZipCode”. 
+
+```{r}
+percent_missing <- DogBite %>% group_by(Borough) %>% 
+  summarize(num_bites = n(), num_na = sum(is.na(`Age`))) %>% 
+  mutate(percent_na = round(num_na/num_bites, 2)) %>% 
+  arrange(-percent_na)
+DogBitesum <- DogBite %>% 
+  group_by(Borough) %>% 
+  summarize(meanAge = round(mean(as.numeric(`Age`), na.rm = TRUE), 1)) %>%
+  left_join(percent_missing %>% select(Borough, percent_na),
+            by = "Borough") %>% 
+  arrange(desc(percent_na))
+DogBitesum
+```
+
+```{r}
+DogBitesumtidy <- DogBitesum %>%
+  pivot_longer(cols = meanAge,
+               names_to = "subject",
+               values_to = "meanscore")
+ggplot(DogBitesumtidy, aes(meanscore, percent_na, color = Borough)) + geom_point(size = 2) + facet_wrap(~subject) + theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+We also explore the relationship between average age of dogs and the missing percent of “Age” in different boroughs. We could roughly infer that the smaller the average age is, the higher the missing percent of “Age” is. However, this relationship is not stable and not obvious.
+
+## Number of missing by year
+
+```{r}
+processed_DogBite <- DogBite %>%
+  mutate(Year = case_when(
+  str_detect(DogBite$DateOfBite, "2015") ~ "2015",
+  str_detect(DogBite$DateOfBite, "2016") ~ "2016",
+  str_detect(DogBite$DateOfBite, "2017") ~ "2017"
+))
+
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(sum.na = sum(is.na(Age)))
+
+ggplot(missing, aes(x = 1:3, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Number of missing values by year") +
+  xlab("") +
+  ylab("Number of missing ages") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(sum.na = sum(is.na(Breed)))
+
+ggplot(missing, aes(x = 1:3, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Number of missing values by year") +
+  xlab("") +
+  ylab("Number of missing breeds") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(sum.na = sum(is.na(ZipCode)))
+
+ggplot(missing, aes(x = 1:3, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Number of missing values by year") +
+  xlab("") +
+  ylab("Number of missing ZipCodes") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+We process our data and show the number of missing values by year, i.e., 2015, 2016, and 2017. Note that we use the entire dataset instead of our 40 samples in this part for better discussion. We use three plots to show the situations of “Age”, “Breed”, and “ZipCode” separately. We could see that in all of the three plots, events in 2015 miss most values. From 2015 to 2017, the number of missing values gradually decreased in total (especially for “Breed”). However, we are not sure whether this is due to the optimization of management, or because the data contained in our dataset in 2015 is the most. Thus, we show the proportion of missing values by year then.
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(num = n(), sum.na = sum(is.na(Age))) %>%
+  mutate(percent_na = sum.na/num)
+
+ggplot(missing, aes(x = 1:3, y = percent_na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Proportion of missing values by year") +
+  xlab("") +
+  ylab("Proportion of missing ages") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(num = n(), sum.na = sum(is.na(Breed))) %>%
+  mutate(percent_na = sum.na/num)
+
+ggplot(missing, aes(x = 1:3, y = percent_na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Proportion of missing values by year") +
+  xlab("") +
+  ylab("Proportion of missing breeds") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(Year) %>% 
+  summarise(num = n(), sum.na = sum(is.na(ZipCode))) %>%
+  mutate(percent_na = sum.na/num)
+
+ggplot(missing, aes(x = 1:3, y = percent_na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:3, labels = missing$Year) +
+  ggtitle("Proportion of missing values by year") +
+  xlab("") +
+  ylab("Proportion of missing ZipCodes") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+We found that in the proportion of missing values by year, it is clear that as time goes on, the proportion of missing value has a decreasing trend, especially for “Breed” and “ZipCode”. One possible reason is that the government has strengthened its management of dog bites and put forward higher requirements for data integrity. As a result, there are less missing values in 2017.
+
+## Number of missing by month
+
+```{r}
+processed_DogBite <- DogBite %>%
+  mutate(Month = case_when(
+    str_detect(DogBite$DateOfBite, "January") ~ "01",
+    str_detect(DogBite$DateOfBite, "February") ~ "02",
+    str_detect(DogBite$DateOfBite, "March") ~ "03",
+    str_detect(DogBite$DateOfBite, "April") ~ "04",
+    str_detect(DogBite$DateOfBite, "May") ~ "05",
+    str_detect(DogBite$DateOfBite, "June") ~ "06",
+    str_detect(DogBite$DateOfBite, "July") ~ "07",
+    str_detect(DogBite$DateOfBite, "August") ~ "08",
+    str_detect(DogBite$DateOfBite, "September") ~ "09",
+    str_detect(DogBite$DateOfBite, "October") ~ "10",
+    str_detect(DogBite$DateOfBite, "November") ~ "11",
+    str_detect(DogBite$DateOfBite, "December") ~ "12")) %>%
+  mutate(Year = case_when(
+    str_detect(DogBite$DateOfBite, "2015") ~ "2015",
+    str_detect(DogBite$DateOfBite, "2016") ~ "2016",
+    str_detect(DogBite$DateOfBite, "2017") ~ "2017")) 
+processed_DogBite$CombinedDate <- str_c(processed_DogBite$Year, "-", processed_DogBite$Month)
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(sum.na = sum(is.na(Age))) %>%
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Number of missing values by month") +
+  xlab("") +
+  ylab("Number of missing ages") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(sum.na = sum(is.na(Breed))) %>%
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Number of missing values by month") +
+  xlab("") +
+  ylab("Number of missing breeds") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(sum.na = sum(is.na(ZipCode))) %>%
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = sum.na)) +
+  geom_col(color = "blue", fill = "lightblue") +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Number of missing values by month") +
+  xlab("") +
+  ylab("Number of missing ZipCodes") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+For further analysis, we process our data and show the number of missing values by month, e.g., 2015-01, 2015-02. Note that we use the entire dataset instead of our 40 samples in this part for better discussion. We use three plots to show the situations of “Age”, “Breed”, and “ZipCode” separately. We could see that from 2015 to 2017, the number of missing values gradually decreased in total (especially for “Breed”). In addition, the plot has the periodicity, and the number of missing values increases in summer of each year. However, we are not sure whether this is due to the optimization of management and particularity of summer, or because the data quantity. Thus, we show the proportion of missing values by month then.
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(num_bites = n(), sum.na = sum(is.na(Age))) %>%
+  mutate(percent_na = sum.na/num_bites) %>% 
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = percent_na)) +
+  geom_point() +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Proportion of missing values by month") +
+  xlab("") +
+  ylab("Proportion of missing ages") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(num_bites = n(), sum.na = sum(is.na(Breed))) %>%
+  mutate(percent_na = sum.na/num_bites) %>% 
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = percent_na)) +
+  geom_point() +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Proportion of missing values by month") +
+  xlab("") +
+  ylab("Proportion of missing breeds") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+```{r}
+missing <- processed_DogBite %>% 
+  group_by(CombinedDate) %>% 
+  summarise(num_bites = n(), sum.na = sum(is.na(ZipCode))) %>%
+  mutate(percent_na = sum.na/num_bites) %>% 
+  arrange(CombinedDate)
+
+ggplot(missing, aes(x = 1:36, y = percent_na)) +
+  geom_point() +
+  scale_x_continuous(breaks = 1:36, labels = missing$CombinedDate) +
+  ggtitle("Proportion of missing values by month") +
+  xlab("") +
+  ylab("Proportion of missing ZipCodes") +
+  theme(axis.text.x = element_text(angle = 90))
+```
+
+We found that in the proportion of missing values by month, it is clear that as time goes on, the proportion of missing value has a decreasing trend. One possible reason is that the government has strengthened its management of dog bites and put forward higher requirements for data integrity. In addition, the plot has the periodicity, and the proportion of missing values increases in summer of each year. We do not know the reason now. We will further analyze the time series in our final project to try to solve this problem.
+
+<!--chapter:end:04-missing.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Results
+
+## Analysis of Breed
+
+In this part, we analyze the relationship between the number of dog bites and breeds of dogs. We noticed that our Dog Bites dataset contains thousands of breeds, while most of them only have few records of dog bites. We count dog bites by breeds and choose Top 9 breeds that have the most dog bite events for further discussion. Top 9 breeds are as follows: Pit Bull, UNKNOWN, Shih Tzu, American Pit Bull Terrier/Pit Bull, Chihuahua, American Pit Bull Mix / Pit Bull Mix, German Shepherd, Mixed / Other, and Yorkshire Terrier. 
+
+Then we use a plot to show the percentages of dog bites among the 9 breeds. We found that the breed with the highest proportion of biting people is “Pit Bull” and “UNKNOWN” comes second. The percentages of these two breeds are similar and much higher than other 6 breeds. 
+
+```{r}
+library(pacman)
+p_load(tidyverse)
+p_load(lubridate)
+p_load(ggExtra)
+
+
+lct <- Sys.getlocale("LC_TIME")
+Sys.setlocale("LC_TIME", "C")
+
+DogBiteDF <- read_csv("DOHMH_Dog_Bite_Data.csv", na = c("", "NA","?"))
+Temperature <- read_csv("tempbymonth.csv", na = c("", "NA"))
+DogRegDF <- read_csv("NYC_Dog_Licensing_Dataset.csv")
+DogBiteDF <- DogBiteDF %>% 
+  mutate(MonthOfBite = month(strptime(pull(DogBiteDF, DateOfBite), 
+                                      format="%B %d %Y"))) %>% 
+  mutate(YearOfBite = year(strptime(pull(DogBiteDF, DateOfBite), 
+                                      format="%B %d %Y")))
+
+DogBiteDF <- DogBiteDF %>% 
+  mutate(Breed = replace_na(Breed, 'UNKNOWN'))
+
+DogBiteDF <- DogBiteDF %>% 
+  mutate(Age = if_else(grepl('Y|y', Age, fixed = TRUE),parse_number(Age),
+                       if_else(grepl('M|m', Age, fixed = TRUE), 
+                               parse_number(Age)/12, 
+                               parse_number(replace_na(Age,'-1')))))
+
+Temperature <- Temperature %>% 
+  pivot_longer(!Year, names_to = "Month", 
+               names_transform = list(Month = as.integer),
+               values_to = "Avg_temp",
+               values_drop_na = TRUE)
+
+DogBiteDF <- DogBiteDF %>% left_join(., Temperature, 
+                                     by=c('MonthOfBite'='Month', 'YearOfBite'='Year'), suffix = c("_x", "_y"))
+```
+
+```{r}
+library(pacman)
+p_load(tidyverse)
+p_load(scales)
+
+data_for_draw_3 <- DogBiteDF %>% 
+  group_by(Breed) %>% 
+  count(name='value') %>% 
+  arrange(desc(value))
+data_for_draw_3$Breed <- as.factor(data_for_draw_3$Breed) %>%
+  fct_reorder(., data_for_draw_3$value, min, .desc = TRUE)
+
+data_for_draw_3$fraction <- data_for_draw_3$value / sum(data_for_draw_3$value)
+data_for_draw_3$ymax <- cumsum(data_for_draw_3$fraction)
+data_for_draw_3$ymin <- c(0, head(data_for_draw_3$ymax, n=-1))
+data_for_draw_3$labelPosition <- (data_for_draw_3$ymax + data_for_draw_3$ymin) / 2
+
+# Compute a good label
+data_for_draw_3$label <- paste0(data_for_draw_3$Breed, ":\n ", data_for_draw_3$value)
+data_for_draw_3 <- data_for_draw_3 %>% head(9)
+# Make the plot
+graph1 <- ggplot(data_for_draw_3, aes(ymax=ymax, ymin=ymin, xmax=3, xmin=2, fill=Breed)) +
+  geom_rect() +
+  geom_text(x=3.5, aes(y=labelPosition, label=percent(fraction,accuracy=0.01)), size=3, inherit.aes = FALSE) + 
+  scale_fill_brewer(palette="RdYlBu") +
+  # scale_color_brewer(palette="RdYlBu") +
+  coord_polar(theta="y") +
+  xlim(c(0, 3)) +
+  theme_void() +
+  labs(title="Bite records count by Breed (Top 9)")
+
+graph1
+```
+
+We aim to explore the real reason of this result. For example, why does “Pit Bull” have the highest proportion of biting people? Because a large proportion of dog owners have this breed of dogs and it becomes the most common breed in NYC, or because of its natural potential of being aggressive? To answer this question, we introduce our auxiliary dataset (NYC Dog Licensing Dataset), which is much larger than the dog bites dataset, to roughly estimate the population composition of breeds. This dataset could roughly reflect the composition of dogs in NYC, which is adequate for our discussion. In this auxiliary dataset, we also choose Top 9 breeds with the largest population to draw a plot. Top 9 breeds are as follows: UNKOWN, Yorkshire Terrier, Shih Tzu, Chihuahua, Maltese, Labrador Retriever, American Pit Bull Mix / Pit Bull Mix, Labrador Retriever Crossbreed, and American Pit Bull Terrier / Pit Bull.
+
+```{r}
+data_for_draw_3 <- DogRegDF %>% 
+  rename(., Breed = BreedName) %>%
+  mutate(Breed = replace_na(Breed, 'UNKNOWN')) %>% 
+  group_by(Breed) %>% 
+  count(name='value') %>% 
+  arrange(desc(value)) 
+
+data_for_draw_3$Breed <- as.factor(data_for_draw_3$Breed) %>%
+  fct_reorder(., data_for_draw_3$value, min, .desc = TRUE)
+
+data_for_draw_3$fraction <- data_for_draw_3$value / sum(data_for_draw_3$value)
+data_for_draw_3$ymax <- cumsum(data_for_draw_3$fraction)
+data_for_draw_3$ymin <- c(0, head(data_for_draw_3$ymax, n=-1))
+data_for_draw_3$labelPosition <- (data_for_draw_3$ymax + data_for_draw_3$ymin) / 2
+
+# Compute a good label
+data_for_draw_3$label <- paste0(data_for_draw_3$Breed, ":\n ", data_for_draw_3$value)
+data_for_draw_3 <- data_for_draw_3 %>% head(9)
+# Make the plot
+graph2 <- ggplot(data_for_draw_3, aes(ymax=ymax, ymin=ymin, xmax=3, xmin=2, fill=Breed)) +
+  geom_rect() +
+  geom_text(x=3.5, aes(y=labelPosition, label=percent(fraction,accuracy=0.01)), size=3, inherit.aes = FALSE) + 
+  scale_fill_brewer(palette="RdYlBu") +
+  # scale_color_brewer(palette="RdYlBu") +
+  coord_polar(theta="y") +
+  xlim(c(0, 3)) +
+  theme_void() +
+  labs(title="NYC Dog Registered Number on Breed (Top 9)")
+
+graph2
+```
+
+Now we could compare the two plots for analysis. First, we noticed that “Pit Bull” is not in Top 9 breeds with the largest population. In other words, it is not the most common breed in NYC, while it has the highest proportion of biting people. Based on this, we can speculate that “Pit Bull” has the great natural potential of being aggressive. This is reasonable, since Pit Bulls were originally bred for bull baiting and dog fighting, and because of this heritage, they often show a tendency to attack other animals with a remarkable ferocity. Second, for the “UNKOWN” breed, it has the largest population in NYC according to the second plot. Therefore, for the situation that dogs of “UNKOWN” breed cause the second most dog bite events, we cannot directly determine whether this is simply because its highest proportion in dog owners’ home in NYC. However, we could still make some guesses. If dog owners do not know the breed of dogs, it will be very likely that they adopt the dogs rather than purchased them. However, the breed of dogs could be identified through later medical tests. Except for certain mixed dogs, it is not that difficult to know the breeds. If dog owners do not even know about the breed of their dogs, this may indicate that they do not have very good control over dogs and their dogs are more likely to bite people. Finally, we could summarize a general rule. For breeds that appear in the first plot while not in the second one, i.e., Pit Bull, German Shepherd, and Mixed / Other, they may be quite aggressive. They are not very common in NYC, while have the largest proportion of biting people. For breeds that appear in the second plot while not in the first one, i.e., Maltese, Labrador Retriever, and Labrador Retriever Crossbreed, they may be friendly. They are very common in NYC, while do not have the large proportion of biting events. For breeds that appear in both of the two plots, we could not directly determine their aggression.
+
+## Analysis of Borough
+
+In this part, we analyze the relationship between the number of dog bites and boroughs. We noticed that our Dog Bites dataset contains records of 6 boroughs, i.e., Bronx, Manhattan, Brooklyn, Staten Island, Queens, and Other. We are curious about the distribution of dog bites in different boroughs. First, we draw a plot to show the distribution of dog bites in boroughs in 2015, 2016, and 2017. Except for a slight difference between Brooklyn and Manhattan in 2015 and 2016, the distributions among boroughs of the three years are similar. We found that “Queens” has the largest number of dog bites, and “Manhattan” and “Brooklyn” come second or third. The percentages of these three boroughs are similar and much higher than other 3 boroughs.
+
+```{r, warning=FALSE}
+data_for_draw <- DogBiteDF %>% 
+  group_by(YearOfBite, Borough) %>% 
+  count(name='value') %>% 
+  arrange(YearOfBite, value)
+
+# Set a number of 'empty bar' to add at the end of each group
+empty_bar <- 1
+to_add <- data.frame(matrix(NA, empty_bar*nlevels(as.factor(data_for_draw$YearOfBite)), ncol(data_for_draw)))
+colnames(to_add) <- colnames(data_for_draw)
+to_add$YearOfBite <- rep(as.numeric(levels(as.factor(data_for_draw$YearOfBite))), each=empty_bar)
+data_for_draw <- rbind(data_for_draw, to_add)
+data_for_draw <- data_for_draw %>% arrange(YearOfBite)
+data_for_draw$id <- seq(1, nrow(data_for_draw))
+
+# Get the name and the y position of each label
+label_biteDF <- data_for_draw
+number_of_bar <- nrow(label_biteDF)
+angle <- 90 - 360 * (label_biteDF$id-0.5) /number_of_bar
+label_biteDF$hjust <- ifelse(angle < -90, 1, 0)
+label_biteDF$angle <- ifelse(angle < -90, angle+180, angle)
+ 
+# prepare a data frame for base lines
+baselines_DF <- data_for_draw %>% 
+  group_by(YearOfBite) %>% 
+  summarize(start=min(id), end=max(id) - empty_bar) %>% 
+  rowwise() %>% 
+  mutate(title=mean(c(start, end)))
+ 
+# prepare a data frame for grid (scales)
+grid_data <- baselines_DF
+grid_data$end <- grid_data$end[c( nrow(grid_data), 1:nrow(grid_data)-1)] + 1
+grid_data$start <- grid_data$start - 1
+grid_data <- grid_data[-1,]
+ 
+# Make the plot
+graph3 <- ggplot(data_for_draw, aes(x=as.factor(id), y=value, fill=as.factor(YearOfBite))) +
+  
+  geom_bar(stat="identity", alpha=0.5) +
+  annotate("text", x = rep(max(data_for_draw$id),4), y = c(200, 400, 600, 800), label = c("200", "400", "600", "800") , color="grey", size=2 , angle=0, fontface="bold", vjust=0.5) +
+  
+  ylim(-500,900) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    axis.text = element_blank(),
+    axis.title = element_blank(),
+    panel.grid = element_blank(),
+    plot.margin = unit(rep(-1,4), "cm") 
+  ) +
+  coord_polar() +
+  geom_text(data=label_biteDF, aes(x=id, y=value+10, label=Borough, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=2.5, angle= label_biteDF$angle, inherit.aes = FALSE ) +
+  # Add base line information
+  geom_segment(data=baselines_DF, aes(x = start, y = -50, xend = end, yend = -51), colour = "black", alpha=0.8, size=0.6 , inherit.aes = FALSE ) +
+  geom_text(data=baselines_DF, aes(x = title, y = -150, label=YearOfBite), vjust=1, colour = "black", alpha=0.8, size=2, fontface="bold", inherit.aes = FALSE) +
+  scale_color_brewer(palette = "RdYlBu")
+
+graph3
+```
+
+We aim to explore the real reason of this result. For example, why does “Queens” have the largest number of biting people? Because a large proportion of dog owners live and walk their dogs in this borough, or because of the insufficient management in this borough? To answer this question, we introduce our auxiliary dataset (NYC Dog Licensing Dataset), which is much larger than the dog bites dataset, to roughly estimate the population composition of boroughs. This dataset could roughly reflect the composition of dogs in NYC, which is adequate for our discussion. In this auxiliary dataset, the values of “Borough” is missing for all of the rows, thus we use the column “ZipCode” to classify the records to the corresponding boroughs. 
+
+Since the influence of different years is not obvious here, we will not concentrate on years in this part. We draw two bar charts to compare them clearly. The first one shows the numbers of dog bites in different boroughs, while the second one shows the numbers of (licensed) dogs in different boroughs which roughly reflects the composition and situation of dogs in NYC.
+
+```{r}
+DogRegDFtt = DogRegDF
+DogRegDFtt $ZipCode = as.numeric(DogRegDFtt $ZipCode)
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=10001 & DogRegDFtt$ZipCode <= 10282] = "Manhattan"
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=10451 & DogRegDFtt$ZipCode <= 10475] = "Bronx"
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=11201 & DogRegDFtt$ZipCode <= 11256] = "Brooklyn"
+DogRegDFtt$Borough[(DogRegDFtt$ZipCode>=11004 & DogRegDFtt$ZipCode <= 11109) | (DogRegDFtt$ZipCode>=11351 & DogRegDFtt$ZipCode <= 11697)] = "Queens"
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=10301 & DogRegDFtt$ZipCode <= 10314] = "Staten Island"
+LicT = DogRegDFtt[c("Borough")]
+LicT$group = "Licensed"
+BiteT = DogBiteDF[c("Borough")]
+BiteT$group = "Biting"
+data_for_draw8 = rbind(LicT, BiteT)
+graph10 = ggplot(data_for_draw8, aes(x = Borough, fill = group)) + 
+  geom_bar() + 
+  facet_wrap(~ group, ncol = 1, scales="free_y") + 
+  labs(title = "Bite Count & Licensed Count by Borough", xlab = "Age (Year)") + 
+  scale_fill_brewer(palette="Pastel1")
+graph10
+```
+
+Now we could compare the two plots for analysis. First, we noticed that “Queens” is not the borough with most dogs. In other words, it does not contain the most dogs, while it has the highest proportion of biting people. Based on this, we can speculate that the management or related policies are not adequate in this borough and it is more at risk of being bitten by dogs in Queens. Second, for “Manhattan” and “Brooklyn”, they have largest population of dogs according to the second plot. Therefore, for the situation that dogs of “Manhattan” and “Brooklyn” cause the second and third most dog bite events, we cannot directly determine whether this is simply because their highest proportion in dogs or certain characteristics in these boroughs. Finally, we could summarize a general rule. For boroughs that contain not many dogs while have a high proportion of dog bites, i.e., Bronx and Queens, they may be more risky for dog bites. We could further analyze the dog bites laws and management polies in these boroughs. For boroughs that contain many dogs and have a high proportion of dog bites, i.e., Brooklyn and Manhattan, we could not directly speculate their risk and situation.
+
+## Analysis of Time
+
+In this part, we analyze the relationship between the number of dog bites and time. First, from the first plot in 5.2, we have noticed that the situations of dog bites in 2015, 2016, and 2017 do not have a large difference. We also show the total numbers of dog bites in the three years and we cannot observe an obvious rule between them. During the analyzing process, we found that dog bites in different months have certain rules, thus we concentrate on months rather than years in this part to analyze the relationship between dog bites and time.
+
+```{r}
+Biteyear <- DogBiteDF %>% 
+  group_by(YearOfBite) %>% 
+  count(name='count')
+Biteyear
+```
+
+Since we have observed the differences between boroughs in 5.2, we are still curious about the relationship between dog bites and time in different boroughs. Therefore, we draw a bar chart to show the numbers of dog bites in different months in different boroughs.
+
+```{r}
+data_for_draw_1 <- DogBiteDF %>% 
+  group_by(MonthOfBite, Borough) %>% 
+  count(name='value') %>% 
+  arrange(Borough, MonthOfBite)
+data_for_draw_1$Borough <- as.factor(data_for_draw_1$Borough) %>% 
+  fct_reorder(., data_for_draw_1$value, min, .desc = TRUE)
+
+graph2 <- ggplot(data_for_draw_1, aes(x=as.factor(MonthOfBite), y=value, fill=as.factor(Borough))) +
+  geom_bar(stat = "identity", width=0.8) +
+  facet_wrap(~ Borough, ncol = 2) +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title="Bite records count by month",
+        x ="Month", y = "Numbers") +
+  scale_color_brewer(palette = "RdYlBu")
+
+
+graph2
+```
+
+We found that the number of dog bites increases in summer in almost all boroughs, which attracts our attention. We are curious about whether it is related to temperature. Will dogs be more aggressive when the temperature is higher? With this question, we use our second auxiliary dataset, i.e., Average temperature in NYC Data, to extract the temperature data. According to 3.4, we use this dataset to obtain the corresponding temperature for each dog bite. We use “MonthOfBite” and “YearOfBite” to match our rows to the corresponding temperature, and add the corresponding temperature as a new column named “Avg_temp” to the main dog bites dataset. Then we draw a scatterplot to show the numbers of dog bites under different temperature in different boroughs.
+
+```{r, message=FALSE, warning=FALSE}
+data_for_draw_2 <- DogBiteDF %>% 
+  group_by(Avg_temp, Borough) %>% 
+  count(name='value') %>% 
+  arrange(Borough, Avg_temp)
+data_for_draw_2$Borough <- as.factor(data_for_draw_2$Borough) %>% 
+  fct_reorder(., data_for_draw_2$value, min, .desc = TRUE)
+
+graph3 <- ggplot(data_for_draw_2, aes(x=Avg_temp, y=value, color=as.factor(Borough))) +
+  geom_point() +
+  geom_smooth(method = "loess") +
+  facet_wrap(~ Borough, ncol = 2, scales='free_y') +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(title="Bite records count by Monthly Average Temperature",
+        x ="Temperature(F)", y = "Numbers") +
+  scale_color_brewer(palette = "RdYlBu")
+
+
+graph3
+```
+
+Obviously, the higher the temperature, the more dog bites. This is a general rule in almost all boroughs. We speculate that there are two reasons. First, the aggression of dogs may be influenced by temperature. Dogs may be more testy and aggressive on hot summer days. Second, dog owners may walk their dogs more often in summer. As we know, NYC is very cold in winter and dog owners may be afraid of cold and reduce their frequency of walking dogs. In most cases, dog bites occur outside the home of dog owners. Walking the dog less often will reduce the frequency of dog bites.
+
+## Analysis of Gender / SpayNeuter
+
+In this part, we analyze the relationship between the number of dog bites and the gender / spayed and neutered status of dogs. We draw a heatmap to roughly analyze the two characteristics. 
+
+```{r}
+data_for_draw_5 <- DogBiteDF %>% 
+  group_by(Gender, SpayNeuter) %>% 
+  count(name = 'Number') %>% 
+  ungroup()
+
+graph6 <- ggplot(data_for_draw_5, aes(Gender, SpayNeuter, fill= Number)) + 
+  geom_tile() +
+  geom_text(aes(label = Number)) +
+  scale_fill_gradient(low="orange", high="red") +
+  theme_minimal()
+
+graph6
+```
+
+First, dogs of unknown gender have the largest proportion of biting people. Male dogs come second. The numbers of “UNKNOWN” and “Male” are similar and much higher than “Female”. The situation of dogs with the unknown gender is reasonable. Gender is a very easily known characteristic of dogs. Although dog owners do not know the gender of dogs when adopting or purchasing dogs, they could easily identify the gender of dogs through later medical tests. Except for few dogs, it is not difficult to know the gender. If dog owners do not even know about the gender of their dogs, this may indicate that they do not give good consideration to dogs, and do not have very good control over dogs, thus their dogs are more likely to bite people. As for the difference between male dogs and female dogs, we will discuss later.
+
+Second, for male dogs and female dogs, spayed and neutered status will not influence the number of dog bites a lot. For male dogs, the number of those are neutered and the number of those are not neutered are similar. For female dogs, the number of those are spayed and the number of those are not spayed are similar. However, for unknown gender dogs, almost all of them are not spayed or neutered. This is reasonable. As we discussed above, gender is a very easily known characteristic of dogs. If dog owners do not even know about the gender of their dogs, this may indicate that they do not give good consideration to dogs, and do not have very good control over dogs. Spayed and neutered status is a good indication to measure if dog owners take good care of dogs, thus owners that do not even know the gender of dogs are more likely not to have spaying / neutering operations for their dogs. Without good control from owners, these dogs are more likely to bite people.
+
+Now, we aim to further analyze the difference between dog bite numbers of male dogs and female dogs. We have found that male dogs have a much larger number of dog bites than female dogs from the above plot. We aim to explore the real reason of this result. Why does male dogs have the larger number of biting people? Because a large proportion of dog owners have male dogs and it becomes the most common in NYC, or because of its natural potential of being aggressive? To answer this question, we introduce our auxiliary dataset (NYC Dog Licensing Dataset), which is much larger than the dog bites dataset, to roughly estimate the population composition of genders. This dataset could roughly reflect the composition of dogs in NYC, which is adequate for our discussion. 
+
+```{r}
+DogRegDF = DogRegDF %>% 
+  separate(LicenseIssuedDate, sep = "/", into = c(NA,NA,"YearOfIssued"), remove = FALSE)
+DogRegDF$YearOfIssued = as.numeric(DogRegDF$YearOfIssued)
+DogRegDFt = subset(DogRegDF, YearOfIssued>=2015 & YearOfIssued<=2017)
+DogRegDFt = DogRegDF
+DogRegDFt$Age = DogRegDFt$YearOfIssued - DogRegDFt$AnimalBirthMonth
+DogRegDFt = subset(DogRegDFt, Age <= 20 & Age >= 0)
+DogBiteDFt = subset(DogBiteDF, Age <= 20 & Age >= 0)
+data_for_draw_6 = DogBiteDFt["Age"]
+data_for_draw_6$group = "Biting"
+temp = DogRegDFt["Age"]
+temp$group = "Licensed"
+tempBite = DogBiteDF[c("YearOfBite","Gender")]
+tempLic = DogRegDF[c("YearOfIssued","AnimalGender")]
+colnames(tempLic)[2] = "Gender"
+colnames(tempLic)[1] = "Year"
+colnames(tempBite)[1] = "Year"
+tempLic$Gender[is.na(tempLic$Gender)] = "U"
+BiteC = tempBite %>% 
+  group_by(Gender) %>% 
+  count(name='count')
+LicC = tempLic %>% 
+  group_by(Gender) %>% 
+  count(name='count')
+# dog bite data
+BiteC["Proportion"] = BiteC$count/sum(BiteC$count)
+# Licence data
+LicC["Proportion"] = LicC$count/sum(LicC$count)
+```
+
+```{r}
+tempBite$group = "Biting"
+tempLic$group = "Licensed"
+
+data_for_draw_7 = rbind(tempBite, tempLic)
+data_for_draw_7 = subset(data_for_draw_7, Year >= 2015 & Year <= 2017)
+
+graph9 = ggplot(data_for_draw_7, aes(x = Year, fill = Gender)) + 
+  geom_histogram(position = "dodge", bins = 3) + 
+  facet_wrap(~ group, ncol = 1, scales="free_y") + 
+  labs(title = "Bite Count & Licensed Count by Gender Each Year", xlab = "Age (Year)") + 
+  scale_fill_brewer(palette="Pastel1")
+
+graph9
+```
+
+We draw two bar charts to compare them clearly. The first one shows the numbers of dog bites in different genders, while the second one shows the numbers of (licensed) dogs in different genders which roughly reflects the composition and situation of dogs in NYC.
+
+Now we could compare the two plots for analysis. Although more people prefer to keep male dogs, the difference in numbers between male ones and female ones is not that large, especially in 2015. Male dogs are only a little more than female dogs. Based on this, we can speculate that male dogs may have greater natural potential of being aggressive than female dogs.
+
+## Analysis of Age
+
+In this part, we analyze the relationship between the number of dog bites and the age of dogs. Since we have observed the differences between boroughs in 5.2, we are still curious about the relationship between dog bites and age in different boroughs. Therefore, we draw a plot to show the numbers of dog bites with different ages of dogs in different boroughs.
+
+```{r}
+p_load(ggridges)
+
+data_for_draw_4 <- DogBiteDF %>% 
+  filter(Age<25 & Age > 0) 
+  # group_by(Age, Borough) %>% 
+  # count(name='value') %>% 
+  # arrange(Borough, Age)
+data_for_draw_4$Borough <- as.factor(data_for_draw_4$Borough)
+
+graph5 <- data_for_draw_4 %>%
+  ggplot(aes(y=Borough, x=Age,  fill=Borough)) +
+    geom_density_ridges(alpha=0.6, stat="binline", bins=22, scale=0.9) +
+    theme_ridges() +
+    theme(
+      legend.position="none",
+      panel.spacing = unit(0.5, "lines"),
+    ) +
+    labs(title="Bite records count by Age",
+        x ="Age (Year)", y = "Numbers")
+
+graph5
+
+```
+
+We found that younger (i.e., 1-5 years old) dogs have the largest number of dog bites in almost all boroughs. We aim to explore the real reason of this result. Why does younger dogs have the highest number of biting people? Because a large proportion of dog owners keep younger dogs and younger ones becomes common in NYC, or because of their natural potential of being aggressive? To answer this question, we introduce our auxiliary dataset (NYC Dog Licensing Dataset), which is much larger than the dog bites dataset, to roughly estimate the population composition of breeds. This dataset could roughly reflect the composition of dogs in NYC, which is adequate for our discussion. 
+Note that in this auxiliary dataset, each record represents a unique dog license that was active during the year, but not necessarily a unique record per dog, since a license that is renewed during the year results in a separate record of an active license period. As a result, we do not need to worry about the relationship between the age and dog growth. We just use this dataset to reflect the “roughly” composition of dogs with different ages in NYC. We draw two histograms to compare them clearly. The first one shows the numbers of dog bites of dogs with different ages, while the second one shows the numbers of (licensed) dogs with different ages which roughly reflects the composition and situation of dogs in NYC. We also show the corresponding density curves to for better analysis.
+
+```{r}
+DogRegDF = DogRegDF %>% 
+  separate(LicenseIssuedDate, sep = "/", into = c(NA,NA,"YearOfIssued"), remove = FALSE)
+DogRegDF$YearOfIssued = as.numeric(DogRegDF$YearOfIssued)
+DogRegDFt = subset(DogRegDF, YearOfIssued>=2015 & YearOfIssued<=2017)
+DogRegDFt = DogRegDF
+DogRegDFt$Age = DogRegDFt$YearOfIssued - DogRegDFt$AnimalBirthMonth
+DogRegDFt = subset(DogRegDFt, Age <= 20 & Age >= 0)
+DogBiteDFt = subset(DogBiteDF, Age <= 20 & Age >= 0)
+data_for_draw_6 = DogBiteDFt["Age"]
+data_for_draw_6$group = "Biting"
+temp = DogRegDFt["Age"]
+temp$group = "Licensed"
+data_for_draw_6 = rbind(data_for_draw_6, temp)
+
+graph7 = ggplot(data_for_draw_6, aes(x = Age, fill = group)) + 
+  geom_histogram(position = "identity", bins = 20) + 
+  facet_wrap(~ group, ncol = 1, scales="free_y") + 
+  labs(title = "Bite Count & Licensed Count by Age", xlab = "Age (Year)") + 
+  scale_fill_brewer(palette="Pastel1")
+
+graph8 = ggplot(data_for_draw_6, aes(x = Age, fill = group)) + 
+  geom_density(adjust = 1.5, alpha = 0.5) + 
+  facet_wrap(~ group, ncol = 1, scales="free_y") + 
+  labs(title = "Bite Count & Licensed Count Density Dist. by Age", xlab = "Age (Year)") + 
+  scale_fill_brewer(palette="Pastel1")
+
+graph7
+
+graph8
+```
+
+As expected, a large proportion of dog owners keep younger dogs, and the shapes of plots that denote dog bite numbers and dog numbers in NYC are similar. As a result, we could not directly determine the aggression of dogs with different ages.
+
+```{r}
+t = DogBiteDF %>% 
+  group_by(Breed) %>% 
+  count(name='count') %>% 
+  arrange(desc(count)) %>% 
+  head(9)
+breedList = c(t$Breed)
+data_for_draw_9 = DogBiteDF[DogBiteDF$Breed %in% breedList,]
+data_for_draw_9 = subset(data_for_draw_9, Age >= 0 & Age <= 20)
+data_for_draw_9$Breed = str_wrap(data_for_draw_9$Breed, width = 10)
+<<<<<<< HEAD
+graph11 = ggplot(data_for_draw_9, aes(x=Breed, y=Age, fill=Breed)) + 
+=======
+graph11 = ggplot(data_for_draw_9, aes(x=reorder(Breed, Age, median), y=Age, fill=Breed)) + 
+>>>>>>> 749b09685010be9722d2ac0dfc22066ff635cad6
+  geom_boxplot() +
+  labs(title = "Dog Bites on Age by Breed (Top 9)") + 
+  scale_fill_brewer(palette="Pastel1") +
+  scale_x_discrete(guide = guide_axis(n.dodge = 2)) + NULL
+graph11
+```
+
+<<<<<<< HEAD
+```{r}
+bookdown::render_book("05-results.Rmd")
+```
+
+
+=======
+In many breeds, a large proportion of dogs that bite people are young. The median ages of these dogs biting people are around 3-4 years in all breeds. Some breeds have outliers with a wide range. For example, Pit Bull even contains dog bite events in which the dogs are around 17.5 years old. The fluctuation degree of ages of dogs biting people in some breeds, e.g., American Pit Bull Mix / Pit Bull Mix, is relatively small.
+>>>>>>> 749b09685010be9722d2ac0dfc22066ff635cad6
+
+<!--chapter:end:05-results.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Interactive component
+
+## Introduction
+For this part, we plot the doughnut chart indicating the Top 9 proportion of dog bites accidents caused divided by breeds. To interact with the plot, you can click the areas in New York City (by default, it will show the whole New York City dog bite data) and the doughnut chart will show you the result
+
+## Interactive Part
+```{r cars}
+htmltools::includeHTML("try.html")
+```
+
+<!--chapter:end:06-interactive.Rmd-->
+
+```{r include=FALSE, cache=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+# Conclusion
+
+
+<!--chapter:end:07-conclusion.Rmd-->
+
