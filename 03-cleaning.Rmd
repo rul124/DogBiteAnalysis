@@ -36,22 +36,9 @@ DogBiteDF <- DogBiteDF %>%
 DogBiteDF[, c("Breed")]
 ```
 
-## The column “Age”
-
-A few “Age” records are string not numeric, e.g., “7Y” that denotes 7 years and “7M” for 7 months. We drop any non-numeric characters in these records and convert ages in months to ages in years, e.g., convert “7M” to “7/12”. For empty ages, we use “-1” to denote them. We show the “Age” column as follows.
-
-```{r}
-DogBiteDF <- DogBiteDF %>% 
-  mutate(Age = if_else(grepl('Y|y', Age, fixed = TRUE),parse_number(Age),
-                       if_else(grepl('M|m', Age, fixed = TRUE), 
-                               parse_number(Age)/12, 
-                               parse_number(replace_na(Age,'-1')))))
-DogBiteDF[, c("Age")]
-```
-
 ## Temperature data from Average Temperature in NYC Data
 
-We use our Average Temperature in NYC Data to obtain the corresponding temperature for each dog bite. We use “MonthOfBite” and “YearOfBite” to match our rows to the corresponding temperature, and add the corresponding temperature as a new column named “Avg_temp” to the main dog bites dataset. We show the “Avg_temp”, “MonthOfBite” and “YearOfBite” columns as follows.
+We use our Average Temperature in NYC Data to obtain the monthly average temperature for the corresponding month of each dog bite. We use “MonthOfBite” and “YearOfBite” to match our rows to the corresponding temperature, and add the corresponding temperature as a new column named “Avg_temp” to the main dog bites dataset. We show the “Avg_temp”, “MonthOfBite” and “YearOfBite” columns as follows.
 
 ```{r}
 Temperature <- Temperature %>% 
@@ -63,4 +50,24 @@ Temperature <- Temperature %>%
 DogBiteDF <- DogBiteDF %>% left_join(., Temperature, 
                                      by=c('MonthOfBite'='Month', 'YearOfBite'='Year'), suffix = c("_x", "_y"))
 DogBiteDF[, c("Avg_temp","MonthOfBite","YearOfBite")]
+```
+
+## Bourough data in NYC Dog Licensing Dataset
+
+In our auxiliary dataset (NYC Dog Licensing Dataset), the values of “Borough” is missing for all of the rows, thus we use the column “ZipCode” to classify the records to the corresponding boroughs. We queried the range of ZipCodes in NYC corresponding to each borough, and marked each row with the corresponding “Borough” according to its “ZipCode”. We show the “ZipCode” and “Borough” columns as follows.
+
+```{r}
+DogRegDFtt = DogRegDF
+DogRegDFtt $ZipCode = as.numeric(DogRegDFtt $ZipCode)
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=10001 & DogRegDFtt$ZipCode <= 10282] = "Manhattan"
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=10451 & DogRegDFtt$ZipCode <= 10475] = "Bronx"
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=11201 & DogRegDFtt$ZipCode <= 11256] = "Brooklyn"
+DogRegDFtt$Borough[(DogRegDFtt$ZipCode>=11004 & DogRegDFtt$ZipCode <= 11109) | (DogRegDFtt$ZipCode>=11351 & DogRegDFtt$ZipCode <= 11697)] = "Queens"
+DogRegDFtt$Borough[DogRegDFtt$ZipCode>=10301 & DogRegDFtt$ZipCode <= 10314] = "Staten Island"
+LicT = DogRegDFtt[c("Borough")]
+LicT$group = "Licensed"
+BiteT = DogBiteDF[c("Borough")]
+BiteT$group = "Biting"
+data_for_draw8 = rbind(LicT, BiteT)
+DogRegDFtt[, c("ZipCode","Borough")]
 ```
