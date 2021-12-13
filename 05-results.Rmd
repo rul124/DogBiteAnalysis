@@ -169,7 +169,7 @@ graph3 <- ggplot(data_for_draw, aes(x=as.factor(id), y=value, fill=as.factor(Yea
     axis.text = element_blank(),
     axis.title = element_blank(),
     panel.grid = element_blank(),
-    plot.margin = unit(rep(-1,4), "cm") 
+    plot.title = element_text(hjust = 0.5)
   ) +
   coord_polar() +
   geom_text(data=label_biteDF, aes(x=id, y=value+10, label=Borough, hjust=hjust), color="black", fontface="bold",alpha=0.6, size=2.5, angle= label_biteDF$angle, inherit.aes = FALSE ) +
@@ -178,7 +178,7 @@ graph3 <- ggplot(data_for_draw, aes(x=as.factor(id), y=value, fill=as.factor(Yea
   geom_text(data=baselines_DF, aes(x = title, y = -150, label=YearOfBite), vjust=1, colour = "black", alpha=0.8, size=2, fontface="bold", inherit.aes = FALSE) +
   scale_color_brewer(palette = "RdYlBu")
 
-graph3
+graph3 + labs(title = "Bite Records by Borough and Year")
 ```
 
 We aim to explore the real reason of this result. For example, why does “Queens” have the largest number of dog bites? Because a large proportion of dog owners live and walk their dogs in this borough, or because of the insufficient management in this borough? To answer this question, we introduce our auxiliary dataset (NYC Dog Licensing Dataset), which is much larger than the dog bites dataset, to roughly estimate the population composition of boroughs. This dataset could roughly reflect the composition of dogs in NYC, which is adequate for our discussion. In this auxiliary dataset, the values of “Borough” is missing for all of the rows, thus we use the column “ZipCode” to classify the records to the corresponding boroughs. 
@@ -281,6 +281,7 @@ data_for_draw_5 <- DogBiteDF %>%
 graph6 <- ggplot(data_for_draw_5, aes(Gender, SpayNeuter, fill= Number)) + 
   geom_tile() +
   geom_text(aes(label = Number)) +
+  labs(title = "Heat Chart of Gender / SpayNeuter") + 
   scale_fill_gradient(low="orange", high="red") +
   theme_minimal()
 
